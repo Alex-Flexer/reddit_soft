@@ -1,12 +1,17 @@
+from time import sleep
+
 from selenium.webdriver.common.by import By
 
 from selenium.webdriver.chrome.webdriver import WebDriver as chrome_webdriver
 from selenium.webdriver.firefox.webdriver import WebDriver as firefox_webdriver
 
-from time import sleep
+from exceptions import AmountTitlesExceptions
 
 
 WebDriver = chrome_webdriver | firefox_webdriver
+
+
+MAX_AMOUNT_TITLES = 200
 
 
 def parse_titles(
@@ -14,6 +19,9 @@ def parse_titles(
         subreddit_ind: int = 1,
         amount_titles: int = 10
             ) -> list[str]:
+
+    if (amount_titles > MAX_AMOUNT_TITLES):
+        raise AmountTitlesExceptions(amount_titles, MAX_AMOUNT_TITLES)
 
     titles: list[str] = []
 

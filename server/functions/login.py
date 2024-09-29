@@ -1,12 +1,12 @@
+from time import sleep
+from random import randint
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 
 from selenium.webdriver.chrome.webdriver import WebDriver as chrome_webdriver
 from selenium.webdriver.firefox.webdriver import WebDriver as firefox_webdriver
-
-from time import sleep
-from random import randint
 
 from exceptions import LoginError
 
@@ -29,7 +29,7 @@ def login(driver: WebDriver, username: str, password: str) -> None:
 
     driver.get("https://www.reddit.com/login/")
 
-    sleep(2)
+    sleep(3)
 
     login_input = driver.find_element(By.ID, "login-username")
     password_input = driver.find_element(By.ID, "login-password")
