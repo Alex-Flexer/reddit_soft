@@ -6,8 +6,8 @@ from fastapi.responses import JSONResponse, FileResponse
 app = FastAPI()
 
 
-@app.post("/test/")
-async def log() -> JSONResponse:
+@app.post("/login/")
+async def login() -> JSONResponse:
     pass
 
 
