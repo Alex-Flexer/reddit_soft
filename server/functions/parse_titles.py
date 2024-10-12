@@ -4,8 +4,6 @@ from time import sleep
 from selenium import webdriver
 from selenium.webdriver.chrome.webdriver import WebDriver as chrome_webdriver
 from selenium.webdriver.firefox.webdriver import WebDriver as firefox_webdriver
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 from exceptions import AmountTitlesExceptions
 
@@ -17,6 +15,7 @@ WebDriver = chrome_webdriver | firefox_webdriver
 MAX_AMOUNT_TITLES = 200
 
 driver = webdriver.Chrome()
+
 
 def get_random_int(max_value):
     return random.randint(0, max_value - 1)
@@ -49,22 +48,17 @@ def modify_titles(filtered_titles):
 
 
 def parse_titles(
-        driver: WebDriver,
         subreddit,
         amount_titles: int = 10
 ) -> list[str]:
+    driver = webdriver.Chrome()
+
     post_url1 = f'http://www.reddit.com/r/{subreddit}/new'
 
     if amount_titles > MAX_AMOUNT_TITLES:
         raise AmountTitlesExceptions(amount_titles, MAX_AMOUNT_TITLES)
 
-    titles: list[str] = []
-
     sleep(3)
-
-    title_elements = []
-
-
 
     driver.get(post_url1)
     time.sleep(3)
