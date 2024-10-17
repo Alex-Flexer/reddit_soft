@@ -5,13 +5,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 
-from selenium.webdriver.chrome.webdriver import WebDriver as chrome_webdriver
-from selenium.webdriver.firefox.webdriver import WebDriver as firefox_webdriver
+from selenium.webdriver.chrome.webdriver import WebDriver as ChromeWebdriver
+from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebdriver
 
 from exceptions import LoginError
 
 
-WebDriver = chrome_webdriver | firefox_webdriver
+WebDriver = ChromeWebdriver | FirefoxWebdriver
 
 
 def slow_typing(text: str, mouse: ActionChains) -> None:

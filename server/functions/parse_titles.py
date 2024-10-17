@@ -20,7 +20,7 @@ def parse_titles(
         amount_titles: int = 10
             ) -> list[str]:
 
-    if (amount_titles > MAX_AMOUNT_TITLES):
+    if amount_titles > MAX_AMOUNT_TITLES:
         raise AmountTitlesExceptions(amount_titles, MAX_AMOUNT_TITLES)
 
     titles: list[str] = []

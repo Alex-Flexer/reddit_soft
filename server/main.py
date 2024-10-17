@@ -1,23 +1,51 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, FileResponse
-
+import data_base_functions as db
+from server.data_base_functions import check_user_password
 
 app = FastAPI()
 
 
 @app.post("/login/")
-async def login() -> JSONResponse:
-    pass
+async def login(request: Request) -> JSONResponse:
+    json = await request.json()
+
+    email = json["email"]
+    password = json["password"]
+
+    response_content = {"message": "User was successfully logged in."}
+
+    if not db.check_user_exists(email):
+        response_content["message"] = "User already exists"
+    elif not check_user_password(email, password):
+        response_content["message"] = "Incorrect password"
+
+    return JSONResponse(content=response_content, status_code=200)
 
 
-@app.post("/reg/")
-async def reg() -> JSONResponse:
-    pass
+@app.post("/sing-up/")
+async def sing_up(request: Request) -> JSONResponse:
+    json = await request.json()
+
+    email = json["email"]
+    user_password = json["user_password"]
+    reddit_password = json["reddit_password"]
+
+    response_content = {"message": "User was successfully registered"}
+
+    if db.check_user_exists(email):
+        response_content = {"message": "User already exists"}
+    else:
+        was_user_added = db.add_new_user(email, user_password, reddit_password)
+        if not was_user_added:
+            response_content["message"] = "Something went wrong"
+
+    return JSONResponse(content=response_content, status_code=200)
 
 
-@app.post("/start-living/")
-async def start_acount_living() -> JSONResponse:
+@app.post("/start-farming-carma/")
+async def start_farming_carma() -> JSONResponse:
     pass
 
 
