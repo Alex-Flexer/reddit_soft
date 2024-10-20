@@ -9,26 +9,13 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from login import login
 import pyperclip
+import shutil
 
 driver = webdriver.Edge()
 
 
-def move_photo_to_used(subredditt, photo_pathh):
-    try:
-        used_folder = os.path.join(os.getcwd(), 'subs', subredditt, 'used')
-        if not os.path.exists(used_folder):
-            os.makedirs(used_folder)
-            os.makedirs(used_folder)
-        filename = os.path.basename(photo_pathh)
-        new_path = os.path.join(used_folder, filename)
-        os.rename(photo_pathh, new_path)
-        print(f"Moved {filename} to {used_folder}")
-    except Exception as ee:
-        print(f"Failed to move photo: {ee}")
-
-
 def big_post(subs_path):
-    login(driver, 'zubr985@gmail.com', 'Yuryzub6232@')
+    login(driver, 'example', 'example')
 
     for subdir in os.listdir(subs_path):
         sub_path = os.path.join(subs_path, subdir)
@@ -37,6 +24,10 @@ def big_post(subs_path):
             title = ""
             photo_path = ""
             subreddit = subdir
+            used_path = os.path.join(sub_path, 'used')
+
+            if not os.path.exists(used_path):
+                os.makedirs(used_path)
 
             for file in os.listdir(sub_path):
                 file_path = os.path.join(sub_path, file)
@@ -47,6 +38,8 @@ def big_post(subs_path):
 
                 if file.endswith(".JPG") or file.endswith(".png") or file.endswith(".jpeg"):
                     photo_path = file_path
+
+
 
             try:
                 WebDriverWait(driver, 3).until(EC.alert_is_present(),
@@ -98,7 +91,8 @@ def big_post(subs_path):
                                     'div._2pAQpGYEPAVsPmV5uVmGGU >'
                                     'div > button:nth-child(3)').click()
                 # add photo path
-                move_photo_to_used(subreddit, photo_path)
+                shutil.move(photo_path, os.path.join(used_path, file))
+
 
             except NoSuchElementException as e:
                 print(f"Element not found while processing subreddit '{subreddit}': {e}")
