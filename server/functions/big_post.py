@@ -74,7 +74,7 @@ def big_post(subs_path):
                                     '.PaJBYLqPf_Gie2aZntVQ7._2OVNlZuUd8L9v0yVECZ2iA > div.HOFZo2X7Fr6JVBztpsByj > '
                                     'div._3w_665DK_NH7yIsRMuZkqB > div._1zq6UabIEJJ-z9grsiCJY7 > '
                                     'div._1UbcPNs4A8n5PIWX0H5sGt > div > div > div > p > button').click()
-                # upload button
+                # click upload button
 
                 time.sleep(1)
                 pyautogui.hotkey('ctrl', 'v')
@@ -89,10 +89,9 @@ def big_post(subs_path):
                                     '.PaJBYLqPf_Gie2aZntVQ7._2OVNlZuUd8L9v0yVECZ2iA > div.HOFZo2X7Fr6JVBztpsByj > '
                                     'div._3w_665DK_NH7yIsRMuZkqB > div._1d1--0DMy_jAIxCCoYMo1k > '
                                     'div._2pAQpGYEPAVsPmV5uVmGGU >'
-                                    'div > button:nth-child(3)').click()
-                # add photo path
-                shutil.move(photo_path, os.path.join(used_path, file))
+                                    'div > button:nth-child(3)').click()  # add photo path
 
+                shutil.move(photo_path, os.path.join(used_path, file))  # move to used
 
             except NoSuchElementException as e:
                 print(f"Element not found while processing subreddit '{subreddit}': {e}")
