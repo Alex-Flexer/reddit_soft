@@ -1,6 +1,6 @@
-import time
 import os
-import pyautogui
+import tkinter as tk
+from tkinter import filedialog, messagebox
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -9,7 +9,9 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from login import login
 import pyperclip
+import pyautogui
 import shutil
+import time
 
 driver = webdriver.Edge()
 
@@ -100,4 +102,32 @@ def big_post(subs_path):
                 print(f"An error occurred while processing subreddit '{subreddit}': {e}")
 
 
-big_post(r'C:\Users\zubr9\Сабы')
+def select_folder():
+    folder_selected = filedialog.askdirectory()
+    if folder_selected:
+        entry_folder.delete(0, tk.END)
+        entry_folder.insert(0, folder_selected)
+
+# Функция для запуска big_post
+def start_big_post():
+    subs_path = entry_folder.get()
+    if os.path.exists(subs_path):
+        big_post(subs_path)
+        messagebox.showinfo("Success", "Posting completed!")
+    else:
+        messagebox.showerror("Error", "Invalid folder path!")
+
+# Интерфейс Tkinter
+root = tk.Tk()
+root.title("Reddit Big Poster")
+
+# Поле для выбора папки
+tk.Label(root, text="Select subs folder:").grid(row=0, column=0, padx=10, pady=10)
+entry_folder = tk.Entry(root, width=50)
+entry_folder.grid(row=0, column=1, padx=10, pady=10)
+tk.Button(root, text="Browse", command=select_folder).grid(row=0, column=2, padx=10, pady=10)
+
+# Кнопка для запуска big_post
+tk.Button(root, text="Start Posting", command=start_big_post).grid(row=1, column=1, padx=10, pady=10)
+
+root.mainloop()
