@@ -1,9 +1,10 @@
 import tkinter as tk
-from posting import farm_karma, post_mech, post_auto
 from image_editing import uniqueize_photo, uniqueize_video
 from registration import registration
-from video_downloaders import download_reals, download_shorts, download_tiktok
-
+from converters import tkinter_converters
+from posting import post_mech
+from big_post import tkinter_reddit_big_post
+from farm_carma import tkinter_karma_farm
 
 def create_window():
     root = tk.Tk()
@@ -51,12 +52,10 @@ def create_window():
         ("Uniqueize Video", uniqueize_video),
         ("Uniqueize Photo", uniqueize_photo),
         ("Registration", registration),
-        ("Farm Karma", farm_karma),
-        ("Post Mech", post_mech),
-        ("Post Auto", post_auto),
-        ("download_reals", download_reals),
-        ("download_shorts", download_shorts),
-        ("download_tiktok", download_tiktok)
+        ("Farm Karma", tkinter_karma_farm),
+        ("Post Auto", tkinter_reddit_big_post),
+        ("post_mech", post_mech),
+        ("converters", tkinter_converters)
     ]
 
     for (text, func) in buttons:

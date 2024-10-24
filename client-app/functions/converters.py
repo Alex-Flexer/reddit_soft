@@ -23,40 +23,38 @@ def convert_to_mp4(input_path, output_folder='output'):
         print(f"Converted '{input_path}' to '{output_path}'")
 
 
-def browse_file():
-    file_path = filedialog.askopenfilename()
-    entry_path.delete(0, tk.END)
-    entry_path.insert(0, file_path)
+def tkinter_converters():
+    def browse_file():
+        file_path = filedialog.askopenfilename()
+        entry_path.delete(0, tk.END)
+        entry_path.insert(0, file_path)
 
+    def convert():
+        input_path = entry_path.get()
+        output_folder = 'output'
 
-# Функция выполнения конвертации
-def convert():
-    input_path = entry_path.get()
-    output_folder = 'output'
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
 
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
+        if conversion_choice.get() == 'png':
+            convert_to_png(input_path, output_folder)
+        elif conversion_choice.get() == 'mp4':
+            convert_to_mp4(input_path, output_folder)
 
-    if conversion_choice.get() == 'png':
-        convert_to_png(input_path, output_folder)
-    elif conversion_choice.get() == 'mp4':
-        convert_to_mp4(input_path, output_folder)
+    root = tk.Tk()
+    root.title("File Converter")
 
+    tk.Label(root, text="Select a file:").grid(row=0, column=0, padx=10, pady=10)
+    entry_path = tk.Entry(root, width=50)
+    entry_path.grid(row=0, column=1, padx=10, pady=10)
+    tk.Button(root, text="Browse", command=browse_file).grid(row=0, column=2, padx=10, pady=10)
 
-root = tk.Tk()
-root.title("File Converter")
+    conversion_choice = tk.StringVar(value='png')
+    tk.Radiobutton(root, text="Convert to PNG", variable=conversion_choice, value='png').grid(row=1, column=0, padx=10,
+                                                                                              pady=10)
+    tk.Radiobutton(root, text="Convert to MP4", variable=conversion_choice, value='mp4').grid(row=1, column=1, padx=10,
+                                                                                              pady=10)
 
-tk.Label(root, text="Select a file:").grid(row=0, column=0, padx=10, pady=10)
-entry_path = tk.Entry(root, width=50)
-entry_path.grid(row=0, column=1, padx=10, pady=10)
-tk.Button(root, text="Browse", command=browse_file).grid(row=0, column=2, padx=10, pady=10)
+    tk.Button(root, text="Convert", command=convert).grid(row=2, column=1, padx=10, pady=10)
 
-conversion_choice = tk.StringVar(value='png')
-tk.Radiobutton(root, text="Convert to PNG", variable=conversion_choice, value='png').grid(row=1, column=0, padx=10,
-                                                                                          pady=10)
-tk.Radiobutton(root, text="Convert to MP4", variable=conversion_choice, value='mp4').grid(row=1, column=1, padx=10,
-                                                                                          pady=10)
-
-tk.Button(root, text="Convert", command=convert).grid(row=2, column=1, padx=10, pady=10)
-
-root.mainloop()
+    root.mainloop()

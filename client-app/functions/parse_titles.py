@@ -11,7 +11,6 @@ import random
 import re
 
 import tkinter as tk
-from tkinter import messagebox
 
 WebDriver = chrome_webdriver | firefox_webdriver
 
@@ -53,7 +52,7 @@ def modify_titles(filtered_titles):
 def parse_titles(
         subreddit,
         amount_titles: int = 10
-) -> list[str]:
+) -> str:
     driver = webdriver.Chrome()
 
     post_url1 = f'http://www.reddit.com/r/{subreddit}/new'
@@ -92,18 +91,19 @@ def parse_titles(
     return filtered_titles
 
 
-root = tk.Tk()
-root.title("Reddit Title Parser")
+def tkinter_parse_titles():
+    root = tk.Tk()
+    root.title("Reddit Title Parser")
 
-tk.Label(root, text="Subreddit:").grid(row=0, column=0, padx=10, pady=10)
-entry_subreddit = tk.Entry(root)
-entry_subreddit.grid(row=0, column=1, padx=10, pady=10)
+    tk.Label(root, text="Subreddit:").grid(row=0, column=0, padx=10, pady=10)
+    entry_subreddit = tk.Entry(root)
+    entry_subreddit.grid(row=0, column=1, padx=10, pady=10)
 
-tk.Label(root, text="Amount of titles:").grid(row=1, column=0, padx=10, pady=10)
-entry_amount = tk.Entry(root)
-entry_amount.grid(row=1, column=1, padx=10, pady=10)
+    tk.Label(root, text="Amount of titles:").grid(row=1, column=0, padx=10, pady=10)
+    entry_amount = tk.Entry(root)
+    entry_amount.grid(row=1, column=1, padx=10, pady=10)
 
-btn_parse = tk.Button(root, text="Parse Titles", command=parse_titles)
-btn_parse.grid(row=2, column=0, columnspan=2, pady=10)
+    btn_parse = tk.Button(root, text="Parse Titles", command=parse_titles)
+    btn_parse.grid(row=2, column=0, columnspan=2, pady=10)
 
-root.mainloop()
+    root.mainloop()
