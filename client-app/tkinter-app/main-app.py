@@ -1,68 +1,106 @@
 import tkinter as tk
-from image_editing import uniqueize_photo, uniqueize_video
-from registration import registration
-from converters import tkinter_converters
-from posting import post_mech
-from big_post import tkinter_reddit_big_post
-from farm_carma import tkinter_karma_farm
+from tkinter import messagebox
+import requests
+import random
+from main_func_app import create_window
 
-def create_window():
+
+confirmation_code = None
+
+
+def start_registration():
     root = tk.Tk()
-    root.title("Reddit Soft")
+    root.title("Регистрация")
 
-    root.geometry("400x400")
+    tk.Label(root, text="Логин:").grid(row=0, column=0, padx=10, pady=5)
+    entry_login = tk.Entry(root)
+    entry_login.grid(row=0, column=1, padx=10, pady=5)
 
-    root.configure(bg="#f0f0f0")
+    tk.Label(root, text="Пароль:").grid(row=1, column=0, padx=10, pady=5)
+    entry_password = tk.Entry(root, show="*")
+    entry_password.grid(row=1, column=1, padx=10, pady=5)
 
-    main_frame = tk.Frame(root)
-    main_frame.pack(fill="both", expand=True)
+    def submit_login_password():
+        login = entry_login.get()
+        password = entry_password.get()
 
-    canvas = tk.Canvas(main_frame, bg="#f0f0f0")
-    scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
-    scrollable_frame = tk.Frame(canvas, bg="#f0f0f0")
+        if not login or not password:
+            messagebox.showerror("Ошибка", "Пожалуйста, заполните все поля")
+            return
 
-    scrollable_frame.bind(
-        "<Configure>",
-        lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-    )
+        response = authenticate_user(login, password)
 
-    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        if response.get("status") == "success":
+            root.destroy()
+            request_email()
+        else:
+            messagebox.showerror("Ошибка", "Неправильный логин или пароль")
 
-    canvas.configure(yscrollcommand=scrollbar.set)
-
-    canvas.pack(side="left", fill="both", expand=True)
-    scrollbar.pack(side="right", fill="y")
-
-    button_config = {
-        "font": ("Arial", 14, "bold"),
-        "bg": "#4CAF50",
-        "fg": "white",
-        "activebackground": "#45a049",
-        "activeforeground": "black",
-        "bd": 3,
-        "relief": "raised",
-        "width": 28,
-        "height": 2
-    }
-
-    label = tk.Label(scrollable_frame, text="Choose a Function", font=("Arial", 18), bg="#f0f0f0")
-    label.pack(pady=10)
-
-    buttons = [
-        ("Uniqueize Video", uniqueize_video),
-        ("Uniqueize Photo", uniqueize_photo),
-        ("Registration", registration),
-        ("Farm Karma", tkinter_karma_farm),
-        ("Post Auto", tkinter_reddit_big_post),
-        ("post_mech", post_mech),
-        ("converters", tkinter_converters)
-    ]
-
-    for (text, func) in buttons:
-        button = tk.Button(scrollable_frame, text=text, command=func, **button_config)
-        button.pack(pady=10)
+    tk.Button(root, text="Войти", command=submit_login_password).grid(row=2, column=0, columnspan=2, pady=10)
 
     root.mainloop()
 
-if __name__ == "__main__":
+
+
+
+def request_email():
+    root = tk.Tk()
+    root.title("Ввод почты")
+
+    tk.Label(root, text="Введите вашу почту:").grid(row=0, column=0, padx=10, pady=5)
+    entry_email = tk.Entry(root)
+    entry_email.grid(row=0, column=1, padx=10, pady=5)
+
+    def send_code():
+        email = entry_email.get()
+
+        if not email:
+            messagebox.showerror("Ошибка", "Пожалуйста, введите почту")
+            return
+
+        global confirmation_code
+        confirmation_code = send_confirmation_code(email)
+
+        root.destroy()
+        request_code()
+
+    tk.Button(root, text="Отправить код", command=send_code).grid(row=1, column=0, columnspan=2, pady=10)
+
+    root.mainloop()
+
+
+def request_code():
+    root = tk.Tk()
+    root.title("Подтверждение кода")
+
+    tk.Label(root, text="Введите код:").grid(row=0, column=0, padx=10, pady=5)
+    entry_code = tk.Entry(root)
+    entry_code.grid(row=0, column=1, padx=10, pady=5)
+
+    def verify_code():
+        entered_code = entry_code.get()
+
+        if entered_code == str(confirmation_code):
+            messagebox.showinfo("Успех", "Подтверждение прошло успешно!")
+            root.destroy()
+        else:
+            messagebox.showerror("Ошибка", "Неправильный код")
+
+    tk.Button(root, text="Подтвердить", command=verify_code).grid(row=1, column=0, columnspan=2, pady=10)
+
+    root.destroy()
     create_window()
+
+
+# функция отправки кода на почту
+def send_confirmation_code():
+    print('hello world')
+
+
+# функция проверки пользователя на наличие
+def authenticate_user():
+    print('hello world')
+
+
+# Запуск регистрации
+start_registration()
