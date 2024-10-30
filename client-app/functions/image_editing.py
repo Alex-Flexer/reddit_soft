@@ -3,13 +3,17 @@ from tkinter import filedialog, messagebox
 
 
 def uniqueize_video():
-    # Заглушка для уникализации видео
-    messagebox.showinfo("Video", "Video uniqueization started!")
+    status_label.config(text="Uniqueizing video...")
+    # Placeholder for video uniqueization code
+    messagebox.showinfo("Video", "Video uniqueization completed!")
+    status_label.config(text="Ready")
 
 
 def uniqueize_photo():
-    # Заглушка для уникализации фото
-    messagebox.showinfo("Photo", "Photo uniqueization started!")
+    status_label.config(text="Uniqueizing photo...")
+    # Placeholder for photo uniqueization code
+    messagebox.showinfo("Photo", "Photo uniqueization completed!")
+    status_label.config(text="Ready")
 
 
 def select_file():
@@ -27,10 +31,24 @@ def start_uniqueization():
         messagebox.showerror("Error", "Please select a file")
         return
 
+    # Check file extension based on selection
+    valid_video_extensions = {".mp4", ".avi", ".mov"}
+    valid_photo_extensions = {".jpg", ".jpeg", ".png"}
+
+    file_extension = file_path.split(".")[-1].lower()
+
     if selected_function == "Video":
+        if f".{file_extension}" not in valid_video_extensions:
+            messagebox.showerror("Error", "Please select a valid video file")
+            return
         uniqueize_video()
+
     elif selected_function == "Photo":
+        if f".{file_extension}" not in valid_photo_extensions:
+            messagebox.showerror("Error", "Please select a valid photo file")
+            return
         uniqueize_photo()
+
     else:
         messagebox.showerror("Error", "Please select a function")
 
@@ -48,5 +66,8 @@ tk.Radiobutton(root, text="Uniqueize Video", variable=function_var, value="Video
 tk.Radiobutton(root, text="Uniqueize Photo", variable=function_var, value="Photo").grid(row=1, column=1, padx=10, pady=5)
 
 tk.Button(root, text="Start", command=start_uniqueization).grid(row=2, column=0, columnspan=3, pady=10)
+
+status_label = tk.Label(root, text="Ready")
+status_label.grid(row=3, column=0, columnspan=3, pady=10)
 
 root.mainloop()
