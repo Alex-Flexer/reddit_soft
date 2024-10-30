@@ -1,5 +1,5 @@
 import tkinter as tk
-from image_editing import uniqueize_photo, uniqueize_video
+from image_editing import uniq_tkinter
 from registration import registration
 from converters import tkinter_converters
 from posting import post_mech
@@ -50,8 +50,7 @@ def create_window():
     label.pack(pady=10)
 
     buttons = [
-        ("Uniqueize Video", uniqueize_video),
-        ("Uniqueize Photo", uniqueize_photo),
+        ("Uniqueize photo or video", uniq_tkinter),
         ("Registration", registration),
         ("Farm Karma", tkinter_karma_farm),
         ("Post Auto", tkinter_reddit_big_post),
@@ -66,3 +65,4 @@ def create_window():
     root.mainloop()
 
 
+create_window()
