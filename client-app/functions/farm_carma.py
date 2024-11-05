@@ -11,10 +11,7 @@ from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebdriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium import webdriver
 
-import tkinter as tk
-from tkinter import messagebox
-from log_windows import init_log_window, log_message
-
+# from exceptions import LoginError
 
 WebDriver = ChromeWebdriver | FirefoxWebdriver
 
@@ -32,137 +29,84 @@ class ReactionSection:
 
 reaction_section_list: list[ReactionSection] = []
 
-# Initialize the logging window
-init_log_window()
-
 
 def reload_reaction_sections(driver: WebDriver) -> None:
-    try:
-        driver.get("https://reddit.com/")
-        reaction_section_list.clear()
-        sleep(4)
+    driver.get("https://reddit.com/")
+    reaction_section_list.clear()
 
-        shadow_hosts = driver.find_elements(By.CSS_SELECTOR, 'shreddit-post')
-        for shadow_host in shadow_hosts:
-            shadow_root = shadow_host.shadow_root
-            buttons = shadow_root.find_elements(By.CSS_SELECTOR, 'span > button')
+    sleep(4)
 
-            upvote_button: WebElement | None = None
-            downvote_button: WebElement | None = None
+    shadow_hosts = driver.find_elements(By.CSS_SELECTOR, 'shreddit-post')
 
-            for but in buttons:
-                if "upvote" in but.get_attribute("class"):
-                    upvote_button = but
-                elif "downvote" in but.get_attribute("class"):
-                    downvote_button = but
+    for shadow_host in shadow_hosts:
+        shadow_root = shadow_host.shadow_root
+        buttons = shadow_root.find_elements(By.CSS_SELECTOR, 'span > button')
 
-            reaction_section_list.append(
-                ReactionSection(upvote_button, downvote_button, upvote_button.location['y'])
-            )
-        log_message("Reloaded reaction sections successfully.")
-    except Exception as e:
-        log_message(f"Error reloading reaction sections: {e}")
+        upvote_button: WebElement | None = None
+        downvote_button: WebElement | None = None
+
+        for but in buttons:
+            if "upvote" in but.get_attribute("class"):
+                upvote_button = but
+            elif "downvote" in but.get_attribute("class"):
+                downvote_button = but
+
+        reaction_section_list.append(
+            ReactionSection(upvote_button, downvote_button, upvote_button.location['y'])
+        )
+
 
 
 def mark_reaction(driver: WebDriver, upvote_chance: float, y_position: int):
-    try:
-        section_ind = bisect_left(reaction_section_list, y_position, key=lambda section: section.y)
-        if section_ind >= len(reaction_section_list):
-            reload_reaction_sections(driver)
+    section_ind = bisect_left(reaction_section_list, y_position, key=lambda section: section.y)
+    if section_ind >= len(reaction_section_list):
+        reload_reaction_sections(driver)
 
-        section_ind = bisect_left(reaction_section_list, y_position, key=lambda section: section.y)
-        if random() <= upvote_chance:
-            reaction_section_list[section_ind].upvote_button.click()
-            log_message("Upvoted a post.")
-        else:
-            reaction_section_list[section_ind].downvote_button.click()
-            log_message("Downvoted a post.")
-    except Exception as e:
-        log_message(f"Error marking reaction: {e}")
+    section_ind = bisect_left(reaction_section_list, y_position, key=lambda section: section.y)
+    if random() <= upvote_chance:
+        reaction_section_list[section_ind].upvote_button.click()
+    else:
+        reaction_section_list[section_ind].downvote_button.click()
 
 
 def smooth_scroll_reddit_posts(driver: WebDriver, max_scroll_height: int) -> int:
-    try:
-        max_step = 150
-        min_step = 10
-        pause_chance = 0.1
-        max_pause = 1.5
+    max_step = 150
+    min_step = 10
+    pause_chance = 0.1
+    max_pause = 1.5
 
-        current_scroll_position = 0
+    current_scroll_position = 0
 
-        while current_scroll_position < max_scroll_height:
-            step = randint(min_step, max_step)
-            driver.execute_script(f"window.scrollBy(0, {step});")
-            current_scroll_position += step
+    while current_scroll_position < max_scroll_height:
+        step = randint(min_step, max_step)
+        step = step
 
-            if random() < pause_chance:
-                pause_duration = uniform(0.3, max_pause)
-                sleep(pause_duration)
+        driver.execute_script(f"window.scrollBy(0, {step});")
+        current_scroll_position += step
 
-            scroll_speed = uniform(0.02, 0.10) if current_scroll_position < max_scroll_height * 0.8 else uniform(0.08, 0.15)
-            sleep(scroll_speed)
+        if random() < pause_chance:
+            pause_duration = uniform(0.3, max_pause)
+            sleep(pause_duration)
 
-        log_message(f"Scrolled to position {current_scroll_position}.")
-        return current_scroll_position
-    except Exception as e:
-        log_message(f"Error during smooth scroll: {e}")
-        return current_scroll_position
+        scroll_speed = uniform(0.02, 0.10) \
+            if current_scroll_position < max_scroll_height * 0.8 else uniform(0.08, 0.15)
+
+        sleep(scroll_speed)
+
+    return current_scroll_position
 
 
 def farm_carma(driver: WebDriver, end_time: datetime):
-    try:
-        while datetime.now() < end_time:
-            current_scroll_position = smooth_scroll_reddit_posts(driver, randint(1, 500))
-            sleep(uniform(0.1, 1))
-            mark_reaction(driver, uniform(0.4, 0.7), current_scroll_position)
-            sleep(uniform(0.4, 0.6))
+    while datetime.now() < end_time:
+        current_scroll_position = smooth_scroll_reddit_posts(driver, randint(1, 500))
 
-        log_message("Finished farming karma.")
-        driver.quit()
-    except Exception as e:
-        log_message(f"Error during karma farming: {e}")
-        driver.quit()
+        sleep(uniform(0.1, 1))
+        mark_reaction(driver, uniform(0.4, 0.7), current_scroll_position)
+        sleep(uniform(0.4, 0.6))
 
+    driver.quit()
 
-def tkinter_karma_farm():
-    def start_farming():
-        email = entry_email.get()
-        password = entry_password.get()
-        duration = int(entry_duration.get())
-
-        if not email or not password or not duration:
-            messagebox.showerror("Error", "Please fill in all fields")
-            log_message("Error: Fields are missing for login.")
-            return
-
-        try:
-            driver = webdriver.Chrome()  # or webdriver.Firefox()
-            login(driver, email, password)
-
-            end_time = datetime.now() + timedelta(seconds=duration)
-            farm_carma(driver, end_time)
-
-            messagebox.showinfo("Success", "Farming completed!")
-            log_message("Farming completed successfully.")
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-            log_message(f"Error during farming: {e}")
-
-    root = tk.Tk()
-    root.title("Karma Farmer")
-
-    tk.Label(root, text="Email:").grid(row=0, column=0, padx=10, pady=5)
-    entry_email = tk.Entry(root)
-    entry_email.grid(row=0, column=1, padx=10, pady=5)
-
-    tk.Label(root, text="Password:").grid(row=1, column=0, padx=10, pady=5)
-    entry_password = tk.Entry(root, show="*")
-    entry_password.grid(row=1, column=1, padx=10, pady=5)
-
-    tk.Label(root, text="Duration (seconds):").grid(row=2, column=0, padx=10, pady=5)
-    entry_duration = tk.Entry(root)
-    entry_duration.grid(row=2, column=1, padx=10, pady=5)
-
-    tk.Button(root, text="Start Farming", command=start_farming).grid(row=3, column=0, columnspan=2, pady=10)
-
-    root.mainloop()
+if __name__ == '__main__':
+    driver = webdriver.Firefox()
+    login(driver, "email", "password")
+    farm_carma(driver, datetime.now() + timedelta(seconds=20))

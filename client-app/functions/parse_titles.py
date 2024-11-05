@@ -1,19 +1,19 @@
 import time
 from time import sleep
+
 from selenium import webdriver
 from selenium.webdriver.chrome.webdriver import WebDriver as chrome_webdriver
 from selenium.webdriver.firefox.webdriver import WebDriver as firefox_webdriver
+
 from exceptions import AmountTitlesExceptions
+
 import random
 import re
-import tkinter as tk
-from tkinter import messagebox, scrolledtext
 
 WebDriver = chrome_webdriver | firefox_webdriver
 
 MAX_AMOUNT_TITLES = 200
 
-# Initialize WebDriver globally to avoid reinitializing it in `parse_titles`
 driver = webdriver.Chrome()
 
 
@@ -47,24 +47,30 @@ def modify_titles(filtered_titles):
     return modified_titles
 
 
-def parse_titles(subreddit, amount_titles: int = 10):
+def parse_titles(
+        subreddit,
+        amount_titles: int = 10
+) -> list[str]:
+    driver = webdriver.Chrome()
+
     post_url1 = f'http://www.reddit.com/r/{subreddit}/new'
 
     if amount_titles > MAX_AMOUNT_TITLES:
         raise AmountTitlesExceptions(amount_titles, MAX_AMOUNT_TITLES)
 
-    driver.get(post_url1)
     sleep(3)
+
+    driver.get(post_url1)
+    time.sleep(3)
 
     html = driver.page_source
     titles = re.findall(r'aria-label="([^"]*)"', html)
-    emoji_pattern = re.compile("["  # Emoji pattern to remove emojis
+    emoji_pattern = re.compile("["
                                u"\U0001F600-\U0001F64F"
                                u"\U0001F300-\U0001F5FF"
                                u"\U0001F680-\U0001F6FF"
                                u"\U0001F1E0-\U0001F1FF"
                                "]+", flags=re.UNICODE)
-
     to_remove = {
         'Home', 'Notifications', 'Close dialog', 'Shreddit QR', 'Google play', 'App store',
         'Community actions', 'Post distinguished by admin', 'Post distinguished by moderator',
@@ -77,50 +83,7 @@ def parse_titles(subreddit, amount_titles: int = 10):
     filtered_titles = emoji_pattern.sub(r'', str(filtered_titles))
     if not filtered_titles:
         print(f"No titles found on the subreddit '{subreddit}'")
-        return 'No titles found'
+        filtered_titles = 'default title'
+    modify_titles(filtered_titles)
 
-    modified_titles = modify_titles(filtered_titles)
-    return modified_titles
-
-
-def tkinter_parse_titles():
-    def parse_and_display_titles():
-        subreddit = entry_subreddit.get()
-        amount = entry_amount.get()
-
-        # Input validation
-        if not subreddit:
-            messagebox.showerror("Error", "Please enter a subreddit name")
-            return
-
-        try:
-            amount = int(amount)
-        except ValueError:
-            messagebox.showerror("Error", "Amount of titles must be a number")
-            return
-
-        try:
-            titles = parse_titles(subreddit, amount)
-            text_display.delete(1.0, tk.END)
-            text_display.insert(tk.END, '\n'.join(titles))
-        except AmountTitlesExceptions as e:
-            messagebox.showerror("Error", str(e))
-
-    root = tk.Tk()
-    root.title("Reddit Title Parser")
-
-    tk.Label(root, text="Subreddit:").grid(row=0, column=0, padx=10, pady=10)
-    entry_subreddit = tk.Entry(root)
-    entry_subreddit.grid(row=0, column=1, padx=10, pady=10)
-
-    tk.Label(root, text="Amount of titles:").grid(row=1, column=0, padx=10, pady=10)
-    entry_amount = tk.Entry(root)
-    entry_amount.grid(row=1, column=1, padx=10, pady=10)
-
-    btn_parse = tk.Button(root, text="Parse Titles", command=parse_and_display_titles)
-    btn_parse.grid(row=2, column=0, columnspan=2, pady=10)
-
-    text_display = scrolledtext.ScrolledText(root, width=50, height=15)
-    text_display.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
-
-    root.mainloop()
+    return filtered_titles
