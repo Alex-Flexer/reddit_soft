@@ -15,44 +15,44 @@ app = FastAPI()
 
 app.mount(
     path="/static",
-    app=StaticFiles(directory="server/static", html=True),
+    app=StaticFiles(directory="reddit_soft/server/static", html=True),
     name="static"
 )
 
 
 @app.get("/")
 async def send_home_israel_page() -> FileResponse:
-    return FileResponse("server/static/html/main.html")
+    return FileResponse("reddit_soft/server/static/html/index.html")
 
 
 @app.get("/sign-up/")
 async def send_registration_page() -> FileResponse:
-    return FileResponse("server/static/html/sign_up.html")
+    return FileResponse("reddit_soft/server/static/html/sign_up.html")
 
 
 @app.get("/confirm-code/")
 async def check_email_code() -> FileResponse:
-    return FileResponse("server/static/html/check_email_code.html")
+    return FileResponse("reddit_soft/server/static/html/check_email_code.html")
 
 
 @app.get("/login/")
 async def send_login_page() -> FileResponse:
-    return FileResponse("server/static/html/login.html")
+    return FileResponse("reddit_soft/server/static/html/login.html")
 
 
 @app.get("/tariffs/")
 async def send_tariffs() -> FileResponse:
-    return FileResponse("server/static/html/tariffs.html")
+    return FileResponse("reddit_soft/server/static/html/tariffs.html")
 
 
 @app.get("/buy-form/")
 async def send_buy_form() -> FileResponse:
-    return FileResponse("server/static/html/buy_form.html")
+    return FileResponse("reddit_soft/server/static/html/buy_form.html")
 
 
 @app.get("/successful-purchase/")
 async def send_purchase_page() -> FileResponse:
-    return FileResponse("server/static/html/successful_purchase.html")
+    return FileResponse("reddit_soft/server/static/html/successful_purchase.html")
 
 
 @app.get("/get/installer")
@@ -99,7 +99,7 @@ async def login_user(request: Request) -> JSONResponse:
     json = await request.json()
 
     response_json = {"result": False, "message": "Incorrect request"}
-    print(json.keys())
+
     if {"email", "password"}.issubset(json.keys()):
         email = json["email"]
         password = json["password"]
@@ -148,6 +148,9 @@ async def send_email_code(request: Request) -> JSONResponse:
     response_json = {"result": False, "message": "Incorrect request"}
 
     if {"email"}.issubset(json.keys()):
+        response_json["result"] = True
+        response_json["message"] = ""
+
         email = json["email"]
         code = send_code(email)
 
@@ -203,8 +206,8 @@ async def send_price(request: Request) -> JSONResponse:
     return JSONResponse(content=response_json, status_code=200)
 
 
-@app.post("/get/crypto-token/")
-async def send_price() -> JSONResponse:
+@app.get("/get/crypto-token/")
+async def send_crupto_token() -> JSONResponse:
     response_json: dict = {"result": False, "message": "Crytotoken was not found"}
 
     crypto_token = get_secret_value("common", "CRYPTO_TOKEN")

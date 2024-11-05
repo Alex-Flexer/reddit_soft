@@ -9,12 +9,12 @@ def send_code(email: str) -> str:
     server = SMTP(smtp_server, port)
     server.starttls()
 
-    email = get_secret_value("sender", "email")
-    password = get_secret_value("sender", email)
-    
-    server.login(email, password)
+    sender_email = get_secret_value("sender", "email")
+    password = get_secret_value("sender", sender_email)
+
+    server.login(sender_email, password)
 
     authorization_code = secrets.token_hex(40)
 
-    server.sendmail("sasha.flexer@mail.ru", email, authorization_code)
+    server.sendmail(sender_email, email, authorization_code)
     return authorization_code

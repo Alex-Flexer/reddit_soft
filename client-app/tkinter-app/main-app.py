@@ -1,106 +1,118 @@
 import tkinter as tk
 from tkinter import messagebox
-import requests
-import random
+from requests import ConnectionError, post as post_request
+from json import dumps
 from main_func_app import create_window
 
 
-confirmation_code = None
+user_email = None
 
+root = None
 
 def start_registration():
     root = tk.Tk()
-    root.title("Регистрация")
+    root.title("Registration")
 
-    tk.Label(root, text="Логин:").grid(row=0, column=0, padx=10, pady=5)
-    entry_login = tk.Entry(root)
-    entry_login.grid(row=0, column=1, padx=10, pady=5)
+    tk.Label(root, text="Email:").grid(row=0, column=0, padx=10, pady=5)
+    entry_email = tk.Entry(root)
+    entry_email.grid(row=0, column=1, padx=10, pady=5)
 
-    tk.Label(root, text="Пароль:").grid(row=1, column=0, padx=10, pady=5)
+    tk.Label(root, text="Password:").grid(row=1, column=0, padx=10, pady=5)
     entry_password = tk.Entry(root, show="*")
     entry_password.grid(row=1, column=1, padx=10, pady=5)
 
     def submit_login_password():
-        login = entry_login.get()
+        global user_email
+
+        email = entry_email.get()
         password = entry_password.get()
 
-        if not login or not password:
-            messagebox.showerror("Ошибка", "Пожалуйста, заполните все поля")
+        if not email or not password:
+            messagebox.showerror("Error", "Please fill the required fields")
             return
 
-        response = authenticate_user(login, password)
+        response_json = authenticate_user(email, password)
 
-        if response.get("status") == "success":
+        if response_json is None:
+            messagebox.showerror("Error", "Network error")
+        elif response_json["result"]:
+            user_email = email
             root.destroy()
-            request_email()
+            request_code()
         else:
-            messagebox.showerror("Ошибка", "Неправильный логин или пароль")
+            messagebox.showerror("Error", response_json["message"])
 
     tk.Button(root, text="Войти", command=submit_login_password).grid(row=2, column=0, columnspan=2, pady=10)
 
     root.mainloop()
 
 
-
-
-def request_email():
-    root = tk.Tk()
-    root.title("Ввод почты")
-
-    tk.Label(root, text="Введите вашу почту:").grid(row=0, column=0, padx=10, pady=5)
-    entry_email = tk.Entry(root)
-    entry_email.grid(row=0, column=1, padx=10, pady=5)
-
-    def send_code():
-        email = entry_email.get()
-
-        if not email:
-            messagebox.showerror("Ошибка", "Пожалуйста, введите почту")
-            return
-
-        global confirmation_code
-        confirmation_code = send_confirmation_code(email)
-
-        root.destroy()
-        request_code()
-
-    tk.Button(root, text="Отправить код", command=send_code).grid(row=1, column=0, columnspan=2, pady=10)
-
-    root.mainloop()
-
-
 def request_code():
-    root = tk.Tk()
-    root.title("Подтверждение кода")
+    print("start request code")
+    response_json = send_confirmation_code(user_email)
 
-    tk.Label(root, text="Введите код:").grid(row=0, column=0, padx=10, pady=5)
+    if response_json is None or not response_json["result"]:
+        if response_json is None:
+            messagebox.showerror("Error", "Network error")
+        else:
+            messagebox.showerror("Error", response_json["message"])
+        root.destroy()
+        return
+
+    root = tk.Tk()
+    root.title("Confim Email Code")
+
+    tk.Label(root, text="Enter your email code:").grid(row=0, column=0, padx=10, pady=5)
     entry_code = tk.Entry(root)
     entry_code.grid(row=0, column=1, padx=10, pady=5)
 
     def verify_code():
         entered_code = entry_code.get()
 
-        if entered_code == str(confirmation_code):
-            messagebox.showinfo("Успех", "Подтверждение прошло успешно!")
-            root.destroy()
+        data = dumps({"email": user_email, "code": entered_code})
+        try:
+            response = post_request("http://127.0.0.1:8000/confirm/email-code", data=data)
+            response_json = response.json()
+        except ConnectionError:
+            messagebox.showerror("Error", "Nerwork error")
         else:
-            messagebox.showerror("Ошибка", "Неправильный код")
+            if response_json["result"]:
+                messagebox.showinfo("Success", "Your email code is successfully confirmed!")
+                root.destroy()
+            else:
+                messagebox.showerror("Error", response_json["message"])
 
-    tk.Button(root, text="Подтвердить", command=verify_code).grid(row=1, column=0, columnspan=2, pady=10)
+    tk.Button(root, text="Confirm", command=verify_code).grid(row=1, column=0, columnspan=2, pady=10)
 
+    root.mainloop()
     root.destroy()
+
     create_window()
 
 
 # функция отправки кода на почту
-def send_confirmation_code():
-    print('hello world')
+def send_confirmation_code(email: str):
+    data = dumps({"email": email})
+    try:
+        respose = post_request("http://127.0.0.1:8000/send/email-code/", data=data)
+        json = respose.json()
+    except ConnectionError:
+        json = None
+    finally:
+        return json
 
 
-# функция проверки пользователя на наличие
-def authenticate_user():
-    print('hello world')
+def authenticate_user(email: str, password: str) -> dict | None:
+    data = dumps({"email": email, "password": password})
+
+    try:
+        response = post_request("http://127.0.0.1:8000/login/user", data=data)
+        json = response.json()
+    except ConnectionError:
+        json = None
+    finally:
+        return json
 
 
-# Запуск регистрации
-start_registration()
+if __name__ == "__main__":
+    start_registration()
