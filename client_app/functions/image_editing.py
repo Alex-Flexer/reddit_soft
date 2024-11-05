@@ -4,7 +4,7 @@ import cv2
 import random
 import os
 
-from log_windows import init_log_window, log_message
+from functions.log_windows import init_log_window, log_message
 
 
 def uniq_tkinter():

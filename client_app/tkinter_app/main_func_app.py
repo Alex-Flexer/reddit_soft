@@ -1,10 +1,19 @@
 import tkinter as tk
-from image_editing import uniq_tkinter
-from registration import registration
-from converters import tkinter_converters
-from posting import post_mech
-from big_post import tkinter_reddit_big_post
-from farm_carma import tkinter_karma_farm
+
+
+import sys
+import os
+
+# Get the parent directory path
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_dir)
+
+from functions.image_editing import uniq_tkinter
+from functions.registration import registration
+from functions.converters import tkinter_converters
+from functions.posting import post_mech
+from functions.big_post import tkinter_reddit_big_post
+from functions.farm_carma import tkinter_karma_farm
 
 
 def create_window():

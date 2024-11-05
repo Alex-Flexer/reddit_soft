@@ -2,7 +2,17 @@ import tkinter as tk
 from tkinter import messagebox
 from requests import ConnectionError, post as post_request
 from json import dumps
+
+
 from main_func_app import create_window
+
+
+# Add the parent directory to sys.path
+
+# Now you can import foo from g
+
+# Now you can use the foo function
+# foo()
 
 
 user_email = None
