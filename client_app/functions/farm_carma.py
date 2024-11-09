@@ -3,15 +3,17 @@ from datetime import datetime, timedelta
 from random import randint, uniform, random
 from bisect import bisect_left
 
-from login import login
-
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeWebdriver
 from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebdriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium import webdriver
 
-# from exceptions import LoginError
+import tkinter as tk
+from tkinter import messagebox
+
+from login import login
+
 
 WebDriver = ChromeWebdriver | FirefoxWebdriver
 
@@ -54,7 +56,6 @@ def reload_reaction_sections(driver: WebDriver) -> None:
         reaction_section_list.append(
             ReactionSection(upvote_button, downvote_button, upvote_button.location['y'])
         )
-
 
 
 def mark_reaction(driver: WebDriver, upvote_chance: float, y_position: int):
@@ -106,7 +107,43 @@ def farm_carma(driver: WebDriver, end_time: datetime):
 
     driver.quit()
 
-if __name__ == '__main__':
-    driver = webdriver.Firefox()
-    login(driver, "email", "password")
-    farm_carma(driver, datetime.now() + timedelta(seconds=20))
+
+def tkinter_karma_farm():
+    def start_farming():
+        email = entry_email.get()
+        password = entry_password.get()
+        duration = int(entry_duration.get())
+
+        if not email or not password or not duration:
+            messagebox.showerror("Error", "Please fill in all fields")
+            return
+
+        try:
+            driver = webdriver.Chrome()  # или webdriver.Firefox()
+            login(driver, email, password)
+
+            end_time = datetime.now() + timedelta(seconds=duration)
+            farm_carma(driver, end_time)
+
+            messagebox.showinfo("Success", "Farming completed!")
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+    root = tk.Tk()
+    root.title("Karma Farmer")
+
+    tk.Label(root, text="Email:").grid(row=0, column=0, padx=10, pady=5)
+    entry_email = tk.Entry(root)
+    entry_email.grid(row=0, column=1, padx=10, pady=5)
+
+    tk.Label(root, text="Password:").grid(row=1, column=0, padx=10, pady=5)
+    entry_password = tk.Entry(root, show="*")
+    entry_password.grid(row=1, column=1, padx=10, pady=5)
+
+    tk.Label(root, text="Duration (seconds):").grid(row=2, column=0, padx=10, pady=5)
+    entry_duration = tk.Entry(root)
+    entry_duration.grid(row=2, column=1, padx=10, pady=5)
+
+    tk.Button(root, text="Start Farming", command=start_farming).grid(row=3, column=0, columnspan=2, pady=10)
+
+    root.mainloop()

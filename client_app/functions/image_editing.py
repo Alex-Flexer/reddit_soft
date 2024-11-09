@@ -4,12 +4,14 @@ import cv2
 import random
 import os
 
-from functions.log_windows import init_log_window, log_message
+from log_windows import LogWindow
 
 
 def uniq_tkinter():
+    log_window = LogWindow()
+
     def uniqueize_video(file_path):
-        log_message(f"Starting video uniqueization for: {file_path}")
+        log_window.log_message(f"Starting video uniqueization for: {file_path}")
         status_label.config(text="Uniqueizing video...")
         base_name, ext = os.path.splitext(file_path)
         output_file = f"{base_name}_uniq{ext}"
@@ -19,7 +21,7 @@ def uniq_tkinter():
         cap = cv2.VideoCapture(file_path)
         if not cap.isOpened():
             messagebox.showerror("Video", "Failed to open video.")
-            log_message("Error: Failed to open video.")
+            log_window.log_message("Error: Failed to open video.")
             status_label.config(text="Ready")
             return
 
@@ -31,7 +33,7 @@ def uniq_tkinter():
         if not ret:
             cap.release()
             messagebox.showerror("Video", "Failed to read video frame.")
-            log_message("Error: Failed to read video frame.")
+            log_window.log_message("Error: Failed to read video frame.")
             status_label.config(text="Ready")
             return
 
@@ -57,13 +59,13 @@ def uniq_tkinter():
         out.release()
 
         messagebox.showinfo("Video", f"Video uniqueization completed! Angle: {angle}°, Crop: {crop_pixels}px")
-        log_message(f"Video uniqueization completed for {file_path}. Output: {output_file}")
+        log_window.log_message(f"Video uniqueization completed for {file_path}. Output: {output_file}")
         status_label.config(text="Ready")
 
         return output_file
 
     def uniqueize_photo(file_path):
-        log_message(f"Starting photo uniqueization for: {file_path}")
+        log_window.log_message(f"Starting photo uniqueization for: {file_path}")
         base_name, ext = os.path.splitext(file_path)
         output_file = f"{base_name}_uniq{ext}"
 
@@ -72,7 +74,7 @@ def uniq_tkinter():
 
         image = cv2.imread(file_path)
         if image is None:
-            log_message("Error: Failed to open image.")
+            log_window.log_message("Error: Failed to open image.")
             raise FileNotFoundError("Failed to open image.")
 
         (h, w) = image.shape[:2]
@@ -83,7 +85,7 @@ def uniq_tkinter():
         cropped = rotated[crop_pixels:h - crop_pixels, crop_pixels:w - crop_pixels]
         cv2.imwrite(output_file, cropped)
 
-        log_message(f"Photo uniqueization completed for {file_path}. Output: {output_file}")
+        log_window.log_message(f"Photo uniqueization completed for {file_path}. Output: {output_file}")
         return output_file
 
     def select_file():
@@ -91,7 +93,7 @@ def uniq_tkinter():
         if file_path:
             entry_file.delete(0, tk.END)
             entry_file.insert(0, file_path)
-            log_message(f"Selected file: {file_path}")
+            log_window.log_message(f"Selected file: {file_path}")
 
     def start_uniqueization():
         selected_function = function_var.get()
@@ -99,7 +101,7 @@ def uniq_tkinter():
 
         if not file_path:
             messagebox.showerror("Error", "Please select a file")
-            log_message("Error: No file selected.")
+            log_window.log_message("Error: No file selected.")
             return
 
         valid_video_extensions = {".mp4", ".avi", ".mov"}
@@ -110,20 +112,20 @@ def uniq_tkinter():
         if selected_function == "Video":
             if f".{file_extension}" not in valid_video_extensions:
                 messagebox.showerror("Error", "Please select a valid video file")
-                log_message("Error: Invalid video file extension.")
+                log_window.log_message("Error: Invalid video file extension.")
                 return
             uniqueize_video(file_path)
 
         elif selected_function == "Photo":
             if f".{file_extension}" not in valid_photo_extensions:
                 messagebox.showerror("Error", "Please select a valid photo file")
-                log_message("Error: Invalid photo file extension.")
+                log_window.log_message("Error: Invalid photo file extension.")
                 return
             uniqueize_photo(file_path)
 
         else:
             messagebox.showerror("Error", "Please select a function")
-            log_message("Error: No uniqueization function selected.")
+            log_window.log_message("Error: No uniqueization function selected.")
 
     root = tk.Tk()
     root.title("Uniqueizer")
@@ -143,7 +145,7 @@ def uniq_tkinter():
     status_label = tk.Label(root, text="Ready")
     status_label.grid(row=3, column=0, columnspan=3, pady=10)
 
-    init_log_window()
     root.mainloop()
 
-uniq_tkinter()
+if __name__ == "__main__":
+    uniq_tkinter()

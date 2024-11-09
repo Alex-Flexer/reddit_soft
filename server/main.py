@@ -221,4 +221,4 @@ async def send_crupto_token() -> JSONResponse:
 
 
 if __name__ == '__main__':
-    uvicorn.run('main:app', port=8000, reload=True)
+    uvicorn.run('main:app', host="http://sashaf2m.beget.tech/", port=8000, reload=True)

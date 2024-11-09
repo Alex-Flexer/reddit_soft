@@ -1,67 +1,32 @@
-import time
 from time import sleep
+import random
+import re
 
 from selenium import webdriver
 from selenium.webdriver.chrome.webdriver import WebDriver as chrome_webdriver
 from selenium.webdriver.firefox.webdriver import WebDriver as firefox_webdriver
 
-from exceptions import AmountTitlesExceptions
+import tkinter as tk
 
-import random
-import re
+from log_windows import LogWindow
+
 
 WebDriver = chrome_webdriver | firefox_webdriver
-
-MAX_AMOUNT_TITLES = 200
-
-driver = webdriver.Chrome()
 
 
 def get_random_int(max_value):
     return random.randint(0, max_value - 1)
 
 
-def modify_titles(filtered_titles):
-    modified_titles = []
-
-    for title in filtered_titles:
-        new_title = title
-
-        if get_random_int(3) == 0:
-            new_title = new_title.replace(" you ", " u ")
-        new_title = new_title.replace("you’re", "you are")
-        new_title = new_title.replace("You’re ", "You are ")
-        new_title = new_title.replace(" can't ", " can not ")
-        new_title = new_title.replace("What's ", "What is ")
-        new_title = new_title.replace(" you'll ", " you will ")
-        new_title = new_title.replace(" i ", " I ")
-        new_title = new_title.replace(" hi ", " hey ")
-        new_title = new_title.replace(" dick ", " cock ")
-        new_title = new_title.replace("I'm ", "I am ")
-        new_title = new_title.replace('Say "hi" ', 'Say "yes" ')
-        new_title = new_title.replace(" boobs", " tits")
-        new_title = new_title.replace(' "hey" ', ' "hi" ')
-
-        modified_titles.append(new_title)
-
-    return modified_titles
-
-
-def parse_titles(
-        subreddit,
-        amount_titles: int = 10
-) -> list[str]:
+def parse_titles(subreddit: str) -> str:
     driver = webdriver.Chrome()
+    log_window = LogWindow()
 
     post_url1 = f'http://www.reddit.com/r/{subreddit}/new'
-
-    if amount_titles > MAX_AMOUNT_TITLES:
-        raise AmountTitlesExceptions(amount_titles, MAX_AMOUNT_TITLES)
-
     sleep(3)
 
     driver.get(post_url1)
-    time.sleep(3)
+    sleep(3)
 
     html = driver.page_source
     titles = re.findall(r'aria-label="([^"]*)"', html)
@@ -82,8 +47,25 @@ def parse_titles(
     filtered_titles = [title for title in titles if title not in to_remove]
     filtered_titles = emoji_pattern.sub(r'', str(filtered_titles))
     if not filtered_titles:
-        print(f"No titles found on the subreddit '{subreddit}'")
+        log_window.log_message(f"No titles found on the subreddit '{subreddit}'")
         filtered_titles = 'default title'
-    modify_titles(filtered_titles)
 
     return filtered_titles
+
+
+def tkinter_parse_titles():
+    root = tk.Tk()
+    root.title("Reddit Title Parser")
+
+    tk.Label(root, text="Subreddit:").grid(row=0, column=0, padx=10, pady=10)
+    entry_subreddit = tk.Entry(root)
+    entry_subreddit.grid(row=0, column=1, padx=10, pady=10)
+
+    btn_parse = tk.Button(root, text="Parse Titles", command=lambda: parse_titles(entry_subreddit.get()))
+    btn_parse.grid(row=2, column=0, columnspan=2, pady=10)
+
+    root.mainloop()
+
+
+if __name__ == '__main__':
+    tkinter_parse_titles()

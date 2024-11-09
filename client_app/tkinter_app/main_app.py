@@ -3,19 +3,9 @@ from tkinter import messagebox
 from requests import ConnectionError, post as post_request
 from json import dumps
 
-
 from main_func_app import create_window
 
-
-# Add the parent directory to sys.path
-
-# Now you can import foo from g
-
-# Now you can use the foo function
-# foo()
-
-
-user_email = None
+user_email: str | None = None
 
 root = None
 
@@ -66,11 +56,12 @@ def request_code():
             messagebox.showerror("Error", "Network error")
         else:
             messagebox.showerror("Error", response_json["message"])
+
         root.destroy()
         return
 
     root = tk.Tk()
-    root.title("Confim Email Code")
+    root.title("Confirm Email Code")
 
     tk.Label(root, text="Enter your email code:").grid(row=0, column=0, padx=10, pady=5)
     entry_code = tk.Entry(root)
@@ -104,8 +95,8 @@ def request_code():
 def send_confirmation_code(email: str):
     data = dumps({"email": email})
     try:
-        respose = post_request("http://127.0.0.1:8000/send/email-code/", data=data)
-        json = respose.json()
+        response = post_request("http://127.0.0.1:8000/send/email-code/", data=data)
+        json = response.json()
     except ConnectionError:
         json = None
     finally:
