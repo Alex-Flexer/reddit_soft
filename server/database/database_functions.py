@@ -3,6 +3,7 @@ from sqlalchemy import select
 
 from typing import Type
 from datetime import date, timedelta
+from secrets import token_hex
 
 from database.database_model import engine, User, RedditAccount
 
@@ -45,6 +46,14 @@ def check_authorization_code(email: str, authorization_code: str) -> bool:
         bool(get_user_by_email(email).authorization_code == authorization_code)
 
 
+def check_user_credentials(email: str, password: str, token: str) -> bool:
+    if not check_user_exists(email):
+        return False
+
+    user = get_user_by_email(email)
+    return user.token == token and user.user_password == password
+
+
 def get_user_by_email(email: str) -> User | None:
     return session.scalar(select(User).where(User.email == email))
 
@@ -58,7 +67,7 @@ def get_reddit_account_by_email(email: str) -> RedditAccount | None:
 def get_user_active_subscription_price(email: str) -> float:
     if not check_user_exists(email):
         return -1
-    return get_user_by_email(email).active_subscriprion_price
+    return get_user_by_email(email).active_subscription_price
 
 
 def get_all_users() -> list[Type[User]]:
@@ -146,7 +155,7 @@ def update_subscription_price(email: str, price: float) -> bool:
         return False
 
     session.query(User).filter_by(email=email).\
-        update({"active_subscriprion_price": price})
+        update({"active_subscription_price": price})
 
     session.commit()
     return True
@@ -161,6 +170,18 @@ def update_telegram_id(email: str, new_id: int) -> bool:
 
     session.commit()
     return True
+
+
+def update_user_token(email: str) -> str | None:
+    if not check_user_exists(email):
+        return None
+
+    new_token = token_hex(40)
+    session.query(User).filter_by(email=email). \
+        update({"token": new_token})
+
+    session.commit()
+    return new_token
 
 
 def delete_user_by_email(email: str) -> None:

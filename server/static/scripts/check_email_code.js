@@ -1,5 +1,5 @@
 window.onload = function () {
-    if (!sessionStorage.getItem("email") || !sessionStorage.getItem("password"))
+    if (!sessionStorage.getItem("email"))
         window.location.replace("/login/")
     else {
         send_code(sessionStorage.getItem("email"))
@@ -61,16 +61,12 @@ async function send_code(email) {
 }
 
 async function check_code() {
-    reset_error();
-
     let email = sessionStorage.getItem("email");
-    let password = sessionStorage.getItem("password")
-
-    if (!(email && password))
-        return;
+    reset_error();
 
     let user_code_element = document.getElementById("user_code")
     let code = user_code_element.value;
+    console.log(code);
 
     if (!code) {
         user_code_element.style.setProperty("--place_holder_color", "red");

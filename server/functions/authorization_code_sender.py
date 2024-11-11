@@ -1,5 +1,5 @@
 from smtplib import SMTP
-import secrets
+from secrets import token_hex
 from keyring import get_password as get_secret_value
 
 
@@ -14,7 +14,7 @@ def send_code(email: str) -> str:
 
     server.login(sender_email, password)
 
-    authorization_code = secrets.token_hex(40)
+    authorization_code = token_hex(40)
 
     server.sendmail(sender_email, email, authorization_code)
     return authorization_code

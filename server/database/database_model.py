@@ -4,7 +4,7 @@ from datetime import date
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import create_engine, ForeignKey
 
-engine = create_engine("sqlite:///reddit_soft/server/database/database.db")
+engine = create_engine("sqlite:///database/database.db")
 
 
 class Base(DeclarativeBase):
@@ -26,11 +26,13 @@ class User(Base):
 
     current_price: Mapped[Optional[float]]
 
-    active_subscriprion_price: Mapped[Optional[int]]
+    active_subscription_price: Mapped[Optional[int]]
 
     subscription_end_date: Mapped[Optional[date]]
 
     telegram_id: Mapped[Optional[int]]
+
+    token: Mapped[Optional[str]]
 
     reddit_accounts: Mapped[List["RedditAccount"]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"

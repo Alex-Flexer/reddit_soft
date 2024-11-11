@@ -10,49 +10,50 @@ from random import random
 from functions.check_transaction import check_transaction
 from functions.authorization_code_sender import send_code
 import database.database_functions as db
+from server.database.database_functions import update_user_token
 
 app = FastAPI()
 
 app.mount(
     path="/static",
-    app=StaticFiles(directory="reddit_soft/server/static", html=True),
+    app=StaticFiles(directory="../server/static", html=True),
     name="static"
 )
 
 
 @app.get("/")
-async def send_home_israel_page() -> FileResponse:
-    return FileResponse("reddit_soft/server/static/html/index.html")
+async def send_home_page() -> FileResponse:
+    return FileResponse("../server/static/html/index.html")
 
 
 @app.get("/sign-up/")
 async def send_registration_page() -> FileResponse:
-    return FileResponse("reddit_soft/server/static/html/sign_up.html")
+    return FileResponse("../server/static/html/sign_up.html")
 
 
 @app.get("/confirm-code/")
 async def check_email_code() -> FileResponse:
-    return FileResponse("reddit_soft/server/static/html/check_email_code.html")
+    return FileResponse("../server/static/html/check_email_code.html")
 
 
 @app.get("/login/")
 async def send_login_page() -> FileResponse:
-    return FileResponse("reddit_soft/server/static/html/login.html")
+    return FileResponse("../server/static/html/login.html")
 
 
 @app.get("/tariffs/")
 async def send_tariffs() -> FileResponse:
-    return FileResponse("reddit_soft/server/static/html/tariffs.html")
+    return FileResponse("../server/static/html/tariffs.html")
 
 
 @app.get("/buy-form/")
 async def send_buy_form() -> FileResponse:
-    return FileResponse("reddit_soft/server/static/html/buy_form.html")
+    return FileResponse("../server/static/html/buy_form.html")
 
 
 @app.get("/successful-purchase/")
 async def send_purchase_page() -> FileResponse:
-    return FileResponse("reddit_soft/server/static/html/successful_purchase.html")
+    return FileResponse("../server/static/html/successful_purchase.html")
 
 
 @app.get("/get/installer")
@@ -60,7 +61,7 @@ async def send_installer() -> FileResponse:
     headers = {'Access-Control-Expose-Headers': 'Content-Disposition'}
 
     return FileResponse(
-        "server/private_resources/installer.py", filename="RS-installer.py", headers=headers)
+        "../server/private_resources/installer.py", filename="RS-installer.py", headers=headers)
 
 
 @app.get("/get/instruction")
@@ -68,7 +69,32 @@ async def send_instruction() -> FileResponse:
     headers = {'Access-Control-Expose-Headers': 'Content-Disposition'}
 
     return FileResponse(
-        "server/private_resources/instruction.pdf", filename="RS-instruction.pdf", headers=headers)
+        "../server/private_resources/instruction.pdf", filename="RS-instruction.pdf", headers=headers)
+
+
+@app.post("/get/software")
+async def send_software(request: Request) -> FileResponse:
+    headers = {'Access-Control-Expose-Headers': 'Content-Disposition'}
+
+    json: dict = await request.json()
+    status_code = 400
+
+    if {"email", "password", "token"}.issubset(json.keys()):
+        email = json["email"]
+        password = json["password"]
+        token = json["token"]
+
+        if db.check_user_exists(email):
+            is_valid_user_credentials = db.check_user_credentials(email, password, token)
+            status_code = 200 if is_valid_user_credentials else 403
+        else:
+            status_code = 404
+
+    if status_code == 200:
+        return FileResponse(
+            "../server/private_resources/source.zip", filename="RedditSyndicate.zip", status_code=200, headers=headers)
+    else:
+        return FileResponse("../server/private_resources/empty.txt", status_code=status_code, headers=headers)
 
 
 @app.post("/sign-up/user/")
@@ -131,7 +157,7 @@ async def check_user_code(request: Request) -> JSONResponse:
         code = json["code"]
 
         if not db.check_user_exists(email):
-            response_json["message"] = "User does not exist"
+            response_json["message"] = "User with this email does not exist"
         elif not db.check_authorization_code(email, code):
             response_json["message"] = "Incorrect authorization code"
         else:
@@ -155,6 +181,26 @@ async def send_email_code(request: Request) -> JSONResponse:
         code = send_code(email)
 
         db.update_email_code(email, code)
+
+    return JSONResponse(content=response_json, status_code=200)
+
+
+@app.post("/update/user-token/")
+async def send_email_code(request: Request) -> JSONResponse:
+    json = await request.json()
+    response_json = {"result": False, "message": "Incorrect request", "token": None}
+    
+    if {"email"}.issubset(json.keys()):
+        email = json["email"]
+
+        if not db.check_user_exists(email):
+            response_json["message"] = "User with this email does not exist"
+        else:
+            new_token = update_user_token(email)
+
+            response_json["result"] = True
+            response_json["message"] = ""
+            response_json["token"] = new_token
 
     return JSONResponse(content=response_json, status_code=200)
 
@@ -184,7 +230,30 @@ async def check_user_transaction(request: Request) -> JSONResponse:
         else:
             response_json["message"] = "Users with this email does not exists"
 
-        return response_json
+    return JSONResponse(content=response_json, status_code=200)
+
+
+@app.post("/check/user-credentials/")
+async def check_user_credentials(request: Request) -> JSONResponse:
+    json: dict = await request.json()
+    response_json = {"result": False, "message": "Incorrect request"}
+
+    if {"email", "password", "token"}.issubset(json.keys()):
+        email = json["email"]
+        password = json["password"]
+        token = json["token"]
+
+        if db.check_user_exists(email):
+            is_valid_user_data = db.check_user_credentials(email, password, token)
+            if not is_valid_user_data:
+                response_json["message"] = "Incorrect credentials"
+            else:
+                response_json["result"] = True
+                response_json["message"] = ""
+        else:
+            response_json["message"] = "Users with this email does not exists"
+
+    return JSONResponse(content=response_json, status_code=200)
 
 
 @app.post("/get/price/")
@@ -221,4 +290,4 @@ async def send_crupto_token() -> JSONResponse:
 
 
 if __name__ == '__main__':
-    uvicorn.run('main:app', host="http://sashaf2m.beget.tech/", port=8000, reload=True)
+    uvicorn.run('main:app', port=8000, reload=True)

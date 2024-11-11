@@ -1,13 +1,42 @@
 import tkinter as tk
 from tkinter import messagebox
-from requests import ConnectionError, post as post_request
+
+from requests import ConnectionError, post
 from json import dumps
+from keyring import set_password as set_secret_value
 
 from main_func_app import create_window
 
-user_email: str | None = None
 
-root = None
+user_email: str | None = None
+user_password: str | None = None
+
+root: None | tk.Tk = None
+
+
+def save_credentials() -> None:
+    token = update_token(user_email)
+    if token is None:
+        return
+
+    set_secret_value("user", "email", user_email)
+    set_secret_value("user", "password", user_password)
+    set_secret_value("user", "token", token)
+
+
+def update_token(email: str) -> None | str:
+    data = dumps({"email": email})
+    try:
+        response = post("http://127.0.0.1:8000/update/user-token/", data=data)
+        json = response.json()
+    except ConnectionError:
+        messagebox.showerror("Error", "Network error")
+    else:
+        if not json["result"]:
+            messagebox.showerror("Error", json["message"])
+        else:
+            return json["token"]
+
 
 def start_registration():
     root = tk.Tk()
@@ -22,7 +51,8 @@ def start_registration():
     entry_password.grid(row=1, column=1, padx=10, pady=5)
 
     def submit_login_password():
-        global user_email
+        global user_email, user_password
+        nonlocal entry_password, entry_email
 
         email = entry_email.get()
         password = entry_password.get()
@@ -35,10 +65,14 @@ def start_registration():
 
         if response_json is None:
             messagebox.showerror("Error", "Network error")
+
         elif response_json["result"]:
             user_email = email
+            user_password = password
+
             root.destroy()
             request_code()
+
         else:
             messagebox.showerror("Error", response_json["message"])
 
@@ -48,7 +82,8 @@ def start_registration():
 
 
 def request_code():
-    print("start request code")
+    global root
+
     response_json = send_confirmation_code(user_email)
 
     if response_json is None or not response_json["result"]:
@@ -72,13 +107,15 @@ def request_code():
 
         data = dumps({"email": user_email, "code": entered_code})
         try:
-            response = post_request("http://127.0.0.1:8000/confirm/email-code", data=data)
+            response = post("http://127.0.0.1:8000/confirm/email-code", data=data)
             response_json = response.json()
         except ConnectionError:
             messagebox.showerror("Error", "Nerwork error")
         else:
             if response_json["result"]:
                 messagebox.showinfo("Success", "Your email code is successfully confirmed!")
+                save_credentials()
+                
                 root.destroy()
             else:
                 messagebox.showerror("Error", response_json["message"])
@@ -95,7 +132,7 @@ def request_code():
 def send_confirmation_code(email: str):
     data = dumps({"email": email})
     try:
-        response = post_request("http://127.0.0.1:8000/send/email-code/", data=data)
+        response = post("http://127.0.0.1:8000/send/email-code/", data=data)
         json = response.json()
     except ConnectionError:
         json = None
@@ -107,7 +144,7 @@ def authenticate_user(email: str, password: str) -> dict | None:
     data = dumps({"email": email, "password": password})
 
     try:
-        response = post_request("http://127.0.0.1:8000/login/user", data=data)
+        response = post("http://127.0.0.1:8000/login/user", data=data)
         json = response.json()
     except ConnectionError:
         json = None
