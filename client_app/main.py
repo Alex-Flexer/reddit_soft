@@ -10,11 +10,10 @@ from main_func_app import create_window
 
 def check_user(email, password, token):
     data = dumps({"email": email, "password": password, "token": token})
+    json = None
     try:
         response = post("http://127.0.0.1:8000/check/user-credentials/", data=data)
         json = response.json()
-    except ConnectionError:
-        json = None
     finally:
         return json
 

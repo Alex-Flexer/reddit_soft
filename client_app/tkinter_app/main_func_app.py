@@ -1,11 +1,5 @@
 import tkinter as tk
 
-import sys
-import os
-
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(parent_dir)
-
 from image_editing import uniq_tkinter
 from registration import registration
 from converters import tkinter_converters

@@ -115,8 +115,6 @@ def request_code():
             if response_json["result"]:
                 messagebox.showinfo("Success", "Your email code is successfully confirmed!")
                 save_credentials()
-                
-                root.destroy()
             else:
                 messagebox.showerror("Error", response_json["message"])
 
@@ -128,29 +126,22 @@ def request_code():
     create_window()
 
 
-# функция отправки кода на почту
 def send_confirmation_code(email: str):
     data = dumps({"email": email})
+    json = None
     try:
         response = post("http://127.0.0.1:8000/send/email-code/", data=data)
         json = response.json()
-    except ConnectionError:
-        json = None
     finally:
         return json
 
 
 def authenticate_user(email: str, password: str) -> dict | None:
     data = dumps({"email": email, "password": password})
+    json = None
 
     try:
         response = post("http://127.0.0.1:8000/login/user", data=data)
         json = response.json()
-    except ConnectionError:
-        json = None
     finally:
         return json
-
-
-if __name__ == "__main__":
-    start_registration()

@@ -13,9 +13,9 @@ class LogWindow:
         self.log_window.title("Log Output")
         self.log_window.geometry("400x300")
 
-        log_text = scrolledtext.ScrolledText(self.log_window, wrap=tk.WORD, width=50, height=15)
-        log_text.pack(pady=10, padx=10)
-        log_text.insert(tk.END, "Log output:\n")
+        self._log_text = scrolledtext.ScrolledText(self.log_window, wrap=tk.WORD, width=50, height=15)
+        self._log_text.pack(pady=10, padx=10)
+        self._log_text.insert(tk.END, "Log output:\n")
 
     def log_message(self, *messages: str, sep: str=' ', end: str='\n'):
         message = sep.join(messages) + end

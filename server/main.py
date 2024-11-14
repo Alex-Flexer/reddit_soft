@@ -86,6 +86,7 @@ async def send_software(request: Request) -> FileResponse:
 
         if db.check_user_exists(email):
             is_valid_user_credentials = db.check_user_credentials(email, password, token)
+
             status_code = 200 if is_valid_user_credentials else 403
         else:
             status_code = 404
@@ -284,6 +285,25 @@ async def send_crupto_token() -> JSONResponse:
     if not crypto_token is None:
         response_json["result"] = True
         response_json["token"] = crypto_token
+        response_json["message"] = ""
+
+    return JSONResponse(content=response_json, status_code=200)
+
+
+@app.post("/add/reddit-account/")
+async def send_price(request: Request) -> JSONResponse:
+    json: dict = await request.json()
+    response_json: dict = {"result": False, "message": "Incorrect request"}
+
+    if {"email", "price"}.issubset(json.keys()):
+        email = json["email"]
+        price = json["price"]
+        new_price = price + round(random(), 3)
+
+        db.update_subscription_price(email, new_price)
+
+        response_json["result"] = True
+        response_json["price"] = new_price
         response_json["message"] = ""
 
     return JSONResponse(content=response_json, status_code=200)
