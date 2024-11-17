@@ -8,7 +8,7 @@ window.onload = async function () {
     }
     email = localStorage.getItem("email");
     document.querySelector(".section:nth-child(1) > h2:nth-child(2)").innerHTML = email;
-    
+
     json_crypto_token = await get_crypto_token();
     if (json_crypto_token == -1) {
         mark_error("Network error");
@@ -105,8 +105,6 @@ async function check_user_transaction(email) {
     }
 }
 
-
-
 async function set_price(email) {
     let price_element = document.getElementById("price");
     let json_price = await get_user_price(email, 300);
@@ -122,13 +120,16 @@ async function set_price(email) {
 }
 
 async function check_transaction() {
-    let b1 = document.querySelector(".continue_button");
-    let b2 = document.querySelector(".alternative_button");
+    let b1 = document.querySelector(".continue_button.valiable");
+    let b2 = document.querySelector(".alternative_button.valiable");
 
-    b1.classList.add("unavailable");
-    b2.classList.add("unavailable");
+    if (!(b1 && b2))
+        return;
 
-    let email = sessionStorage.getItem("email");
+    b1.classList.replace("valiable", "unavailable");
+    b2.classList.replace("valiable", "unavailable");
+
+    let email = localStorage.getItem("email");
     json_checking_transaction = await check_user_transaction(email);
 
     if (json_checking_transaction == -1) {
@@ -142,6 +143,11 @@ async function check_transaction() {
         window.location.replace("/successful-purchase");
     }
 
-    b1.classList.remove("unavailable");
-    b2.classList.remove("unavailable");
+    b1.classList.replace("unavailable", "valiable");
+    b2.classList.replace("unavailable", "valiable");
+}
+
+function redirect_to_login() {
+    if (document.querySelector(".alternative_button").classList.contains("valiable"))
+        window.location.replace("/login");
 }

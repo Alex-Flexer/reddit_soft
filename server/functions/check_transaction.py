@@ -1,7 +1,5 @@
 from time import sleep
 
-from keyring import get_password as get_secret_value
-
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
@@ -11,17 +9,17 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
 
-RECIPIENT_TOKEN = get_secret_value("common", "CRYPTO_TOKEN")
+RECIPIENT_TOKEN = "TMPYVBkVZj5pboTAW3VqsW29QMNq6F9Bwq"
 
 
-def check_transaction(amount: float, currency: str = "TRX") -> bool:
+async def check_transaction(amount: float, currency: str = "USDT") -> bool:
     options = Options()
     options.add_argument("--headless")
 
-    driver = webdriver.Firefox(options=options)
-    driver.get(f"https://tronscan.org/#/address/{RECIPIENT_TOKEN}")
+    driver = webdriver.Chrome(options=options)
+    driver.get(f"https://tronscan.org/#/address/{RECIPIENT_TOKEN}/transfers")
 
-    sleep(6)
+    sleep(10)
 
     try:
         table_frame = WebDriverWait(driver, 10).until(
@@ -39,16 +37,21 @@ def check_transaction(amount: float, currency: str = "TRX") -> bool:
     lines = table.find_elements(By.TAG_NAME, "tr")
     for line in lines:
         cells = line.find_elements(By.TAG_NAME, "td")
-        transaction_age_str, value_str = cells[3].text, cells[8].text
+        
+        if len(cells) < 8:
+            break
+
+        transaction_age_str, value_str, currency_str =\
+              cells[2].text, cells[6].text, cells[7].text
 
         if "day" in transaction_age_str:
             break
 
-        value = float(value_str.replace(currency, ''))
+        value = float(value_str.replace(",", ""))
 
-        if currency in value_str and value == amount:
+        if currency in currency_str and value == amount:
+            driver.quit()
             return True
 
-    driver.delete_all_cookies()
     driver.quit()
     return False

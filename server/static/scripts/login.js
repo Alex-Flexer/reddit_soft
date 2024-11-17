@@ -60,9 +60,11 @@ async function login() {
         mark_error(json_login_user["message"]);
     }
     else {
-        sessionStorage.setItem("email", email);
-        sessionStorage.setItem("password", password);
-        window.location.replace("/confirm-code/");
+        localStorage.setItem("email", email);
+        localStorage.setItem("password", password);
+        window.location.replace(
+            (json_login_user["message"] == "Registration email code not confirmed" ? "/confirm-code/" : "/buy-form/")
+        );
     }
 
 }

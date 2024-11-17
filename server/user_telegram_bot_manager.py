@@ -2,8 +2,7 @@ import asyncio
 import logging
 import sys
 from random import random
-
-from keyring import get_password as get_secret_value
+from secrets import token_hex
 
 from aiogram import Bot, Dispatcher, F, Router, html
 from aiogram.client.default import DefaultBotProperties
@@ -25,7 +24,7 @@ import database.database_functions as db
 
 form_router = Router()
 
-TOKEN = get_secret_value("user-telegram-bot", "TOKEN")
+TOKEN = "7704730952:AAFr-cmHnLNeFjg4qyI6jMfgsUmeCc418yU"
 
 BOT_COMMANDS = [
     BotCommand(command="start", description="Start bot"),
@@ -49,6 +48,7 @@ MAIN_KEYBOARD_MARKUP =\
             ],
             [
                 KeyboardButton(text="Renew Subscription"),
+                KeyboardButton(text="Get Confirmation Code"),
             ]
         ],
         resize_keyboard=True,
@@ -67,9 +67,9 @@ CHECKING_TRANSACTION_KEYBOARD_MARKUP =\
 
 
 class Form(StatesGroup):
-    email = State()
-    password = State()
+    set_password = State()
     renew_subscription = State()
+    confirm_code = State()
 
 
 @form_router.message(CommandStart())
@@ -85,21 +85,21 @@ async def command_start(message: Message) -> None:
 
 
 @form_router.message(Command("help"))
-async def command_login(message: Message) -> None:
+async def command_help(message: Message) -> None:
     await message.answer(
         "How can I help you?\n\n"
         "If you have an account please user command /login to log in. "
         "Then you will get more functionality inside the chatbot.\n\n"
-        f"If you have not created your own account yet, you can do it {html.link("here", "http://10.160.13.176:5500/server/static/html/sign_up.html")}.\n\n"
-        f"Also if you have some software problem or some other questions you can contact to our support team (support@mail.ru).",
+        f"If you have not created your own account yet, you can do it {html.link("here", "http://90.156.168.186:8000/")}.\n\n"
+        f"Also if you have some software problem or some other questions you can contact to our support team (reddsyndicate@mail.ru).",
         reply_markup=ReplyKeyboardRemove()
     )
 
 
 @form_router.message(Command("support"))
-async def command_login(message: Message) -> None:
+async def command_support(message: Message) -> None:
     await message.answer(
-        f"Contact to our {html.link("support team", "https://t.me/reddit_syndicate_support_bot")} "
+        f"Contact to our {html.link("support team", "")} "
         "if you have some software problem or some other questions.",
         reply_markup=ReplyKeyboardRemove()
     )
@@ -107,10 +107,42 @@ async def command_login(message: Message) -> None:
 
 @form_router.message(Command("login"))
 async def command_login(message: Message, state: FSMContext) -> None:
-    await state.set_state(Form.email)
+    username = message.from_user.username
+            
+    if not db.check_user_exists(username):
+        await message.answer(
+            f"User with username \"{username}\" does not exist"
+        )
+    else:
+        await state.set_state(Form.set_password)
+        await message.answer(
+            "Please, enter your password:",
+            reply_markup=CANCEL_KEYBOARD_MARKUP
+        )
+
+
+@form_router.message(F.text.casefold() == "get confirmation code")
+async def command_get_confirmation_code(message: Message, state: FSMContext) -> None:
+    is_logged_in = state.get_value("logged_in")
+    if not is_logged_in:
+        await message.answer(
+            "Please, firstly log in. Use command /login",
+            reply_markup=ReplyKeyboardRemove()
+        )
+        return
+
+    username: str = message.from_user.username
+    auth_code = token_hex(16)
+    db.update_email_code(username, auth_code)
+
+    responce_message =\
+        f"Your confirm code: {auth_code}"\
+            if db.check_user_exists(username) else\
+                f"User with username \"{username}\" does not exist"
+
     await message.answer(
-        "Please, enter your email address:",
-        reply_markup=CANCEL_KEYBOARD_MARKUP
+        responce_message,
+        reply_markup=ReplyKeyboardRemove()
     )
 
 
@@ -129,26 +161,7 @@ async def command_cancel(message: Message, state: FSMContext) -> None:
     )
 
 
-@form_router.message(Form.email)
-async def process_email(message: Message, state: FSMContext) -> None:
-    email: str = message.text
-    if not db.check_user_exists(email):
-        await message.answer(
-            f"There is no user with email {email}",
-            reply_markup=CANCEL_KEYBOARD_MARKUP
-        )
-        return
-    
-    await state.update_data(email=email)
-    await state.set_state(Form.password)
-
-    await message.answer(
-        "Oh, I think I recognized you! Let me check your password, enter it below:",
-        reply_markup=CANCEL_KEYBOARD_MARKUP,
-    )
-
-
-@form_router.message(Form.password)
+@form_router.message(Form.set_password)
 async def process_password(message: Message, state: FSMContext) -> None:
     attempts: int | None = await state.get_value("attempts")
     if attempts == 0:
@@ -160,12 +173,12 @@ async def process_password(message: Message, state: FSMContext) -> None:
         return
 
     password: str = message.text
-    email: str = await state.get_value("email")
+    username = message.from_user.username
 
     if attempts is None:
         attempts = 5
 
-    if not db.check_user_password(email, password):
+    if not db.check_user_password(username, password):
         attempts = attempts - 1
         if attempts > 0:
             await message.answer(
@@ -182,9 +195,8 @@ async def process_password(message: Message, state: FSMContext) -> None:
             )
 
     else:
-        email: str = await state.get_value("email")
-        db.update_telegram_id(email, message.from_user.id)
-
+        db.update_telegram_id(username, message.from_user.id)
+        state.update_data(logged_in=True)
         await state.set_state(None)
         await message.answer(
             "Congratulations! You have successfully logged in.",
@@ -196,9 +208,9 @@ async def process_password(message: Message, state: FSMContext) -> None:
 
 @form_router.message(F.text.casefold() == "log out")
 async def process_log_out(message: Message, state: FSMContext) -> None:
-    email = await state.get_value("email")
+    is_logged_in = await state.get_value("logged_in")
 
-    if email is None:
+    if not is_logged_in:
         await message.reply("You have not logged in yet.")
     else:
         await state.clear()
@@ -210,15 +222,15 @@ async def process_log_out(message: Message, state: FSMContext) -> None:
 
 @form_router.message(F.text.casefold() == "account info")
 async def process_account_info(message: Message, state: FSMContext) -> None:
-    email = await state.get_value("email")
+    username = await state.get_value("username")
 
-    if email is None:
+    if username is None:
         await message.answer(
             "You have not logged in yet.",
             reply_markup=ReplyKeyboardRemove()
         )
     else:
-        await show_account_info(message, email)
+        await show_account_info(message, username)
 
 
 async def show_account_info(message: Message, email):
@@ -232,17 +244,17 @@ async def show_account_info(message: Message, email):
 
 @form_router.message(F.text.casefold() == "renew subscription")
 async def process_renew_subscription(message: Message, state: FSMContext):
-    email = await state.get_value("email")
+    username = await state.get_value("username")
 
-    if email is None:
+    if username is None:
         await message.reply("You have not logged in yet.")
     else:
         await state.set_state(Form.renew_subscription)
 
         current_price = 300 + round(random(), 3)
-        db.update_subscription_price(email, current_price)
+        db.update_subscription_price(username, current_price)
 
-        crypto_token = get_secret_value("common", "CRYPTO_TOKEN")
+        crypto_token = "TMPYVBkVZj5pboTAW3VqsW29QMNq6F9Bwq"
 
         await message.answer(
             f"Your current subscription price: {current_price}.\n"
@@ -255,8 +267,8 @@ async def process_renew_subscription(message: Message, state: FSMContext):
 async def process_renew_subscription(message: Message, state: FSMContext):
     await state.set_state(None)
 
-    email: str = await state.get_value("email")
-    active_price = db.get_user_active_subscription_price(email)
+    username: str = await state.get_value("username")
+    active_price = db.get_user_active_subscription_price(username)
 
     wainting_message = await message.answer(
         "Transaction is being verified...\n"
@@ -277,7 +289,7 @@ async def process_renew_subscription(message: Message, state: FSMContext):
         answer_text = "Transaction was not found."
         if transaction_verdict:
             answer_text = "The subscription has been successfully renewed."
-            db.renew_subscription(email)
+            db.renew_subscription(username)
 
         await message.answer(
             answer_text,

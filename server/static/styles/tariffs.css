@@ -45,7 +45,7 @@ body {
     left: 50%;
     transform: translate(-50%);
 
-    font-size: calc(var(--w) * 2.7);
+    font-size: calc(var(--w) * 2.4);
     color: #ffffff;
 }
 

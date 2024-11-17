@@ -61,7 +61,7 @@ async function send_code(email) {
 }
 
 async function check_code() {
-    let email = sessionStorage.getItem("email");
+    let email = localStorage.getItem("email");
     reset_error();
 
     let user_code_element = document.getElementById("user_code")

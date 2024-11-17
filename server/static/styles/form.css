@@ -8,7 +8,8 @@
     padding: 0;
 }
 
-body, html {
+body,
+html {
     font-family: "Kanit";
     background-color: #d3dbed;
     margin: 0;
@@ -100,11 +101,12 @@ input:hover {
     transform: translateX(-50%) scale(1.01);
 }
 
-.continue_button, .alternative_button { 
+.continue_button.valiable,
+.alternative_button.valiable {
     position: relative;
     left: 50%;
     transform: translateX(-50%);
-    
+
     height: 100%;
 
     padding: 10px 20px;
@@ -119,29 +121,61 @@ input:hover {
     transition: 0.5s;
 }
 
-.continue_button:hover, .alternative_button:hover {
+.continue_button.valiable,
+.alternative_button.valiable {
+    color: #ccc;
+    transform: translateX(-50%) scale(0.93);
+}
+
+.continue_button.valiable:hover,
+.alternative_button.valiable:hover {
     border-radius: 0.5em;
     transform: translateX(-50%) scale(1.1);
 }
 
-.continue_button{
+.continue_button.valiable {
     width: 55%;
     font-size: 2em;
     color: #ff4500;
 }
 
-.continue_button:hover{
+.continue_button.valiable:hover {
     color: #00b8b8;
 }
 
-.alternative_button{
+.alternative_button.valiable {
     width: 45%;
     font-size: 1.7em;
     color: #00b8b8;
 }
 
-.alternative_button:hover{
+.alternative_button.valiable:hover {
     color: #ff4500;
+}
+
+.unavailable {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+
+    height: 100%;
+
+    padding: 10px 20px;
+
+    margin-bottom: 0.6em;
+
+    background-color: white;
+    font-family: "Raleway";
+    font-weight: 1000;
+    border: none;
+    border-radius: 5px;
+    
+    color: #ccc;
+    font-size: 2em;
+    width: 50%;
+    transition: 0.5s;
+
+    cursor: wait;
 }
 
 .error_place_wrapper {
@@ -182,10 +216,6 @@ input:hover {
     border-radius: 0.5em;
 }
 
-.unavailable {
-    color: #ccc;
-    transform: scale(0.93);
-}
 
 @media (max-width: 870px) {
     h1 {
@@ -207,11 +237,13 @@ input:hover {
     input::placeholder {
         font-size: calc(var(--w) * 5);
     }
-    
-    .continue_button, .alternative_button {
+
+    .continue_button,
+    .alternative_button {
         font-size: calc(var(--w) * 6);
         width: 80%;
     }
+
     .continue_button {
         margin-top: calc(var(--h) * 10);
     }
@@ -226,4 +258,3 @@ input:hover {
         font-size: calc(var(--w) * 10);
     }
 }
-

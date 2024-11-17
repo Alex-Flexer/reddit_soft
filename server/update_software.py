@@ -31,7 +31,7 @@ def main():
     remove_dist_folder(path_to_obfuscated_client_app)
 
 if __name__ == '__main__':
-    # path_to_obfuscated_client_app = "./private_resources/dist"
-    # join(path_to_obfuscated_client_app, "client_app", "requirements.txt")
+    path_to_obfuscated_client_app = ".\private_resources\dist"
+    join(path_to_obfuscated_client_app, "client_app", "requirements.txt")
     save_requirements(".\server\private_resources\req.txt")
-    # main()
+    main()

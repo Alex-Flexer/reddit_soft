@@ -3,14 +3,12 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from keyring import get_password as get_secret_value
-
 from random import random
 
 from functions.check_transaction import check_transaction
 from functions.authorization_code_sender import send_code
 import database.database_functions as db
-from server.database.database_functions import update_user_token
+from database.database_functions import update_user_token
 
 app = FastAPI()
 
@@ -134,6 +132,7 @@ async def login_user(request: Request) -> JSONResponse:
         if not db.check_user_exists(email):
             response_json["message"] = "User with this email does not exist"
         elif not db.check_user_confirmed(email):
+            response_json["result"] = True
             response_json["message"] = "Registration email code not confirmed"
         elif not db.check_user_password(email, password):
             response_json["message"] = "Incorrect password"
@@ -217,7 +216,7 @@ async def check_user_transaction(request: Request) -> JSONResponse:
         if db.check_user_exists(email):
             try:
                 price = db.get_user_active_subscription_price(email)
-                transaction_verdict = check_transaction(price)
+                transaction_verdict = await check_transaction(price)
             except Exception as e:
                 response_json["message"] = "Unknown checking transaction Error"
                 print(e)
@@ -280,7 +279,7 @@ async def send_price(request: Request) -> JSONResponse:
 async def send_crupto_token() -> JSONResponse:
     response_json: dict = {"result": False, "message": "Crytotoken was not found"}
 
-    crypto_token = get_secret_value("common", "CRYPTO_TOKEN")
+    crypto_token = "TMPYVBkVZj5pboTAW3VqsW29QMNq6F9Bwq"
 
     if not crypto_token is None:
         response_json["result"] = True
@@ -310,4 +309,5 @@ async def send_price(request: Request) -> JSONResponse:
 
 
 if __name__ == '__main__':
-    uvicorn.run('main:app', port=8000, reload=True)
+    uvicorn.run('main:app', host="90.156.168.186", port=8000, reload=True)
+
