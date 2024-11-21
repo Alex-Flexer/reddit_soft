@@ -6,7 +6,6 @@ from fastapi.staticfiles import StaticFiles
 from random import random
 
 from functions.check_transaction import check_transaction
-from functions.authorization_code_sender import send_code
 import database.database_functions as db
 from database.database_functions import update_user_token
 
@@ -131,11 +130,11 @@ async def login_user(request: Request) -> JSONResponse:
 
         if not db.check_user_exists(email):
             response_json["message"] = "User with this email does not exist"
+        elif not db.check_user_password(email, password):
+            response_json["message"] = "Incorrect password"
         elif not db.check_user_confirmed(email):
             response_json["result"] = True
             response_json["message"] = "Registration email code not confirmed"
-        elif not db.check_user_password(email, password):
-            response_json["message"] = "Incorrect password"
         else:
             response_json["result"] = True
             response_json["message"] = ""
@@ -164,23 +163,6 @@ async def check_user_code(request: Request) -> JSONResponse:
             db.confirm_email_code(email)
             response_json["message"] = ""
             response_json["result"] = True
-
-    return JSONResponse(content=response_json, status_code=200)
-
-
-@app.post("/send/email-code/")
-async def send_email_code(request: Request) -> JSONResponse:
-    json = await request.json()
-    response_json = {"result": False, "message": "Incorrect request"}
-
-    if {"email"}.issubset(json.keys()):
-        response_json["result"] = True
-        response_json["message"] = ""
-
-        email = json["email"]
-        code = send_code(email)
-
-        db.update_email_code(email, code)
 
     return JSONResponse(content=response_json, status_code=200)
 
@@ -309,5 +291,5 @@ async def send_price(request: Request) -> JSONResponse:
 
 
 if __name__ == '__main__':
-    uvicorn.run('main:app', host="90.156.168.186", port=8000, reload=True)
+    uvicorn.run('main:app', host="90.156.168.186", port=80, reload=True, workers=4)
 

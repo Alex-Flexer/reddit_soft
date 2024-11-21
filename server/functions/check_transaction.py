@@ -1,4 +1,4 @@
-from time import sleep
+from asyncio import sleep
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
@@ -19,7 +19,7 @@ async def check_transaction(amount: float, currency: str = "USDT") -> bool:
     driver = webdriver.Chrome(options=options)
     driver.get(f"https://tronscan.org/#/address/{RECIPIENT_TOKEN}/transfers")
 
-    sleep(10)
+    await sleep(10)
 
     try:
         table_frame = WebDriverWait(driver, 10).until(
@@ -32,7 +32,7 @@ async def check_transaction(amount: float, currency: str = "USDT") -> bool:
 
     table = table_frame.find_element(By.TAG_NAME, "tbody")
     driver.execute_script("arguments[0].scrollIntoView(true);", table)
-    sleep(0.3)
+    await sleep(1)
 
     lines = table.find_elements(By.TAG_NAME, "tr")
     for line in lines:

@@ -1,9 +1,6 @@
 window.onload = function () {
-    if (!sessionStorage.getItem("email"))
+    if (!localStorage.getItem("email") && !localStorage.getItem("password_confirmed"))
         window.location.replace("/login/")
-    else {
-        send_code(sessionStorage.getItem("email"))
-    }
 };
 
 function mark_error(error_message) {
@@ -13,6 +10,11 @@ function mark_error(error_message) {
 
 function reset_error() {
     mark_error("");
+}
+
+function change_account() {
+    localStorage.clear()
+    window.location.replace("/login/");
 }
 
 async function confirm_email_code(email, code) {
@@ -84,6 +86,7 @@ async function check_code() {
     }
     else {
         localStorage.setItem("email", email);
+        localStorage.setItem("code_confirmed", true)
         window.location.replace("/buy-form/");
     }
 }

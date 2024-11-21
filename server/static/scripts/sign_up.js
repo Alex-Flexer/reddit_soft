@@ -66,7 +66,8 @@ async function sign_up() {
         mark_error(json_sign_up["message"]);
     }
     else {
-        sessionStorage.setItem("email", email);
+        localStorage.setItem("email", email);
+        localStorage.setItem("password_confirmed", true);
         window.location.replace("/confirm-code/");
     }
 }

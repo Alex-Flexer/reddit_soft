@@ -54,6 +54,14 @@ def check_user_credentials(email: str, password: str, token: str) -> bool:
     return user.token == token and user.user_password == password
 
 
+def check_user_subscription(email: str):
+    if not check_user_exists(email):
+        return False
+    
+    subscription_end_date = get_user_by_email(email).subscription_end_date
+    return (not subscription_end_date is None) and (subscription_end_date >= date.today())
+
+
 def get_user_by_email(email: str) -> User | None:
     return session.scalar(select(User).where(User.email == email))
 

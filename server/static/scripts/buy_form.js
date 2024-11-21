@@ -6,6 +6,12 @@ window.onload = async function () {
         window.location.replace("/login");
         return;
     }
+
+    if (!localStorage.getItem("code_confirmed")) {
+        window.location.replace("/confirm-code");
+        return;
+    }
+
     email = localStorage.getItem("email");
     document.querySelector(".section:nth-child(1) > h2:nth-child(2)").innerHTML = email;
 
@@ -20,6 +26,7 @@ window.onload = async function () {
         crypto_token = json_crypto_token["token"];
         set_price(email);
     }
+
 }
 
 async function get_crypto_token() {
@@ -44,12 +51,12 @@ async function get_crypto_token() {
 }
 
 function copy_token() {
-    if (crypto_token) {
-        navigator.clipboard.writeText(crypto_token)
-            .catch(err => {
-                console.error("Failed to copy text: ", err);
-            });
-    }
+    const tempInput = document.createElement('input');
+    tempInput.value = crypto_token;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
 }
 
 function mark_error(error_message) {
@@ -148,6 +155,8 @@ async function check_transaction() {
 }
 
 function redirect_to_login() {
-    if (document.querySelector(".alternative_button").classList.contains("valiable"))
+    if (document.querySelector(".alternative_button").classList.contains("valiable")) {
+        localStorage.clear()
         window.location.replace("/login");
+    }
 }

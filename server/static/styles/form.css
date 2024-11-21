@@ -8,6 +8,13 @@
     padding: 0;
 }
 
+a,
+a:visited,
+a:hover,
+a:active {
+    color: inherit;
+}
+
 body,
 html {
     font-family: "Kanit";
@@ -43,11 +50,19 @@ html {
 
 h1 {
     font-family: "Kanit";
-    font-size: calc(var(--w) * 6);
+    font-size: calc(var(--w) * 4);
     text-align: center;
     color: #e4e3e3;
     margin-top: 0em;
+}
 
+h3 {
+    font-family: "Kanit";
+    font-size: calc(var(--w) * 1.4);
+    text-align: center;
+    color: #cccbcb;
+    margin-top: 0em;
+    margin-bottom: 0.5em;
 }
 
 .form {
@@ -169,7 +184,7 @@ input:hover {
     font-weight: 1000;
     border: none;
     border-radius: 5px;
-    
+
     color: #ccc;
     font-size: 2em;
     width: 50%;
@@ -219,7 +234,12 @@ input:hover {
 
 @media (max-width: 870px) {
     h1 {
-        font-size: calc(var(--w) * 13);
+        font-size: calc(var(--w) * 10);
+        margin-bottom: calc(var(--h) * 9);
+    }
+
+    h3 {
+        font-size: calc(var(--w) * 5);
         margin-bottom: calc(var(--h) * 9);
     }
 
@@ -229,27 +249,31 @@ input:hover {
     }
 
     input {
-        font-size: calc(var(--w) * 8);
+        font-size: calc(var(--w) * 6);
         width: 95%;
         margin-bottom: calc(var(--h) * 3);
     }
 
     input::placeholder {
-        font-size: calc(var(--w) * 5);
+        font-size: calc(var(--w) * 4);
     }
 
-    .continue_button,
-    .alternative_button {
-        font-size: calc(var(--w) * 6);
+    .continue_button.unavailable,
+    .alternative_button.unavailable {
+        font-size: calc(var(--w) * 5);
         width: 80%;
     }
 
-    .continue_button {
-        margin-top: calc(var(--h) * 10);
+    .continue_button.valiable {
+        font-size: calc(var(--w) * 7);
+        margin-top: calc(var(--h) * 5);
+        width: 80%;
     }
 
-    .alternative_button {
+    .alternative_button.valiable {
+        font-size: calc(var(--w) * 5);
         margin-top: calc(var(--h) * 1.5);
+        width: 60%;
     }
 
     .back_button {
