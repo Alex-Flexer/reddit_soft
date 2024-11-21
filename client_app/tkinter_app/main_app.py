@@ -5,7 +5,7 @@ from requests import ConnectionError, post
 from json import dumps
 from keyring import set_password as set_secret_value
 
-from main_func_app import create_window
+from tkinter_app.main_func_app import create_window
 
 
 user_email: str | None = None

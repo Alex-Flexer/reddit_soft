@@ -4,18 +4,19 @@ from keyring import get_password as get_secret_value
 from requests import post
 from json import dumps
 
-from main_app import start_registration
-from main_func_app import create_window
+from tkinter_app import start_registration, create_window
 
 
 def check_user(email, password, token):
     data = dumps({"email": email, "password": password, "token": token})
     json = None
     try:
-        response = post("http://127.0.0.1:8000/check/user-credentials/", data=data)
+        response = post(
+            "http://127.0.0.1:8000/check/user-credentials/", data=data)
         json = response.json()
     finally:
         return json
+
 
 def main():
     email = get_secret_value("user", "email")
@@ -33,6 +34,7 @@ def main():
             messagebox.showerror("Error", response_json["message"])
         else:
             create_window()
+
 
 if __name__ == "__main__":
     main()

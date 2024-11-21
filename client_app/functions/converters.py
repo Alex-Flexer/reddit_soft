@@ -1,5 +1,5 @@
 from PIL import Image
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip
 import os
 import tkinter as tk
 from tkinter import filedialog

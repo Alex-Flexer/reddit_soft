@@ -1,4 +1,7 @@
 import tkinter as tk
+import sys
+
+sys.path.insert(1, r'functions')
 
 from image_editing import uniq_tkinter
 from registration import registration
