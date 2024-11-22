@@ -82,6 +82,15 @@ def get_all_users() -> list[Type[User]]:
     return session.query(User).all()
 
 
+def get_proxy(email: str):
+    acc = get_reddit_account_by_email(email=email)
+    proxy_dict = {'host': acc.proxy_host,
+                  'port': acc.proxy_post,
+                  'user': acc.proxy_user,
+                  'password': acc.proxy_password}
+    return proxy_dict
+
+
 def add_new_user(email: str, user_password: str) -> bool:
     if check_user_exists(email):
         return False
@@ -97,22 +106,16 @@ def add_new_user(email: str, user_password: str) -> bool:
 
 
 def add_new_reddit_account(
-    email: str,
-    password: str,
-    user_email: str,
-    proxy: str,
+    **kwargs
 ) -> bool:
 
-    if not check_user_exists(email=user_email) or\
+    if not check_user_exists(email=kwargs['email']) or\
             check_reddit_account_exists(email):
         return False
 
-    user = get_user_by_email(email=user_email)
+    user = get_user_by_email(email=kwargs['email'])
     session.add(RedditAccount(
-        email=email,
-        password=password,
-        owner=user,
-        proxy=proxy)
+        **kwargs)
     )
     session.commit()
     return True

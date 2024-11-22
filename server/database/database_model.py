@@ -58,9 +58,13 @@ class RedditAccount(Base):
 
     password: Mapped[Optional[str]]
 
-    proxy: Mapped[str]
+    proxy_host: Mapped[str]
 
-    status: Mapped[Optional[str]] = None
+    proxy_port: Mapped[int]
+
+    proxy_user: Mapped[str]
+
+    proxy_password: Mapped[str]
 
     def __str__(self) -> str:
         return f"{self.id} {self.email} {self.password} {self.owner.email}"

@@ -15,7 +15,7 @@ def uniq_tkinter():
         status_label.config(text="Uniqueizing video...")
         base_name, ext = os.path.splitext(file_path)
         output_file = f"{base_name}_uniq{ext}"
-        angle = random.randint(-3, 3)
+        angle = random.randint(-5, 5)
         crop_pixels = random.randint(1, 7)
 
         cap = cv2.VideoCapture(file_path)
@@ -135,7 +135,7 @@ def uniq_tkinter():
     entry_file.grid(row=0, column=1, padx=10, pady=10)
     tk.Button(root, text="Browse", command=select_file).grid(row=0, column=2, padx=10, pady=10)
 
-    function_var = tk.StringVar(value="Video")
+    function_var = tk.StringVar(value="Photo")
     tk.Radiobutton(root, text="Uniqueize Video", variable=function_var, value="Video").grid(row=1, column=0, padx=10,
                                                                                             pady=5)
     tk.Radiobutton(root, text="Uniqueize Photo", variable=function_var, value="Photo").grid(row=1, column=1, padx=10,

@@ -289,6 +289,21 @@ async def send_price(request: Request) -> JSONResponse:
 
     return JSONResponse(content=response_json, status_code=200)
 
+@app.post("/get/proxy/")
+async def get_proxy(request: Request) -> JSONResponse:
+    json: dict = await request.json()
+    response_json: dict = {"result": False, "message": "Incorrect request"}
+
+    if {"email"}.issubset(json.keys()):
+        email = json['email']
+        if db.check_reddit_account_exists(email=email):
+            proxy_info = db.get_proxy(email)
+            response_json += proxy_info
+            response_json['result'] = True
+        else:
+            response_json['massage'] = 'Reddit account eith this email doesnt exist'
+    return JSONResponse(content=response_json, status_code=200)
+
 
 if __name__ == '__main__':
     uvicorn.run('main:app', host="90.156.168.186", port=80, reload=True, workers=4)
