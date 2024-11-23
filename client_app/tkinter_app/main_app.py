@@ -2,8 +2,8 @@ import tkinter as tk
 from tkinter import messagebox
 from requests import ConnectionError, post
 from json import dumps
-from keyring import set_password as set_secret_value
-
+from keyring import set_password as set_secret_value, get_password
+from db_funcs import send_proxy, send_credentials
 user_email: str | None = None
 user_password: str | None = None
 
@@ -14,10 +14,13 @@ def save_credentials() -> None:
     token = update_token(user_email)
     if token is None:
         return
-
     set_secret_value("user", "email", user_email)
     set_secret_value("user", "password", user_password)
     set_secret_value("user", "token", token)
+
+
+def get_user_email():
+    return get_password("user", "email")
 
 
 def update_token(email: str) -> None | str:
@@ -130,8 +133,7 @@ def login_credentials_window():
             messagebox.showerror("Error", "Please fill all fields")
             return
 
-        print("User credentials submitted:", user_login, user_pass)
-
+        send_credentials(user_login, user_pass)
         login_window.destroy()
         proxy_credentials_window()
 
@@ -143,29 +145,39 @@ def proxy_credentials_window():
     proxy_window = tk.Tk()
     proxy_window.title("Proxy Configuration")
 
-    fields = [("host", None), ("port", None), ("proxy_user", None), ("proxy_password", "*")]
-    entries = {}
+    tk.Label(proxy_window, text="Proxy Host:").grid(row=0, column=0, padx=10, pady=5)
+    entry_host = tk.Entry(proxy_window)
+    entry_host.grid(row=0, column=1, padx=10, pady=5)
 
-    for i, (label_text, show_char) in enumerate(fields):
-        tk.Label(proxy_window, text=f"Proxy {label_text}:").grid(row=i, column=0, padx=10, pady=5)
-        entry = tk.Entry(proxy_window, show=show_char)
-        entry.grid(row=i, column=1, padx=10, pady=5)
-        entries[label_text] = entry
+    tk.Label(proxy_window, text="Proxy Port:").grid(row=1, column=0, padx=10, pady=5)
+    entry_port = tk.Entry(proxy_window)
+    entry_port.grid(row=1, column=1, padx=10, pady=5)
+
+    tk.Label(proxy_window, text="Proxy User:").grid(row=2, column=0, padx=10, pady=5)
+    entry_user = tk.Entry(proxy_window)
+    entry_user.grid(row=2, column=1, padx=10, pady=5)
+
+    tk.Label(proxy_window, text="Proxy Password:").grid(row=3, column=0, padx=10, pady=5)
+    entry_password = tk.Entry(proxy_window, show="*")
+    entry_password.grid(row=3, column=1, padx=10, pady=5)
 
     def submit_proxy_credentials():
-        proxy_data = {label: entry.get() for label, entry in entries.items()}
+        proxy_host = entry_host.get()
+        proxy_port = entry_port.get()
+        proxy_user = entry_user.get()
+        proxy_password = entry_password.get()
 
-        if any(not value for value in proxy_data.values()):
+        if not all([proxy_host, proxy_port, proxy_user, proxy_password]):
             messagebox.showerror("Error", "Please fill all fields")
             return
 
-        # Образная функция отправки данных
-        print("Proxy credentials submitted:", proxy_data)
+        send_proxy(proxy_host, proxy_port, proxy_user, proxy_password)
 
         proxy_window.destroy()
 
-    tk.Button(proxy_window, text="Submit", command=submit_proxy_credentials).grid(row=len(fields), column=0, columnspan=2, pady=10)
+    tk.Button(proxy_window, text="Submit", command=submit_proxy_credentials).grid(row=4, column=0, columnspan=2, pady=10)
     proxy_window.mainloop()
+
 
 
 def authenticate_user(email: str, password: str) -> dict | None:
