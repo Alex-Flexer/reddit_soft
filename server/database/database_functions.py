@@ -243,8 +243,4 @@ def show_db(db_name) -> None:
 
 
 if __name__ == "__main__":
-    # email = "sasha.flexer@gmail.com"
-    # add_new_user("sasha.flexer@gmail.com", "0001")
-    # print(get_user_by_email("sasha.flexer@gmail.com").telegram_id)
-    # renew_subscription(email)
     show_db(User)
