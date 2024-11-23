@@ -1,13 +1,13 @@
 var crypto_token = null;
+let email = null;
 
 window.onload = async function () {
-    let email = null;
     if (!localStorage.getItem("email")) {
         window.location.replace("/login");
         return;
     }
 
-    if (!localStorage.getItem("code_confirmed")) {
+    if (!localStorage.getItem("code_confirmed") || localStorage.getItem("code_confirmed") == "false") {
         window.location.replace("/confirm-code");
         return;
     }

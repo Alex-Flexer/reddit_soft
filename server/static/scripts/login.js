@@ -60,13 +60,14 @@ async function login() {
         mark_error(json_login_user["message"]);
     }
     else {
+        console.log("Message:", json_login_user["message"]);
+        localStorage.setItem("password", password);
         localStorage.setItem("email", email);
+
         if (json_login_user["message"] == "Registration email code not confirmed") {
-            localStorage.setItem("code_confirmed", false);
             window.location.replace("/confirm-code/");
         }
         else {
-            localStorage.setItem("code_confirmed", true);
             window.location.replace("/buy-form");
         }
     }
