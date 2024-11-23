@@ -89,7 +89,7 @@ async def command_help(message: Message) -> None:
         "How can I help you?\n\n"
         "If you have an account please user command /login to log in. "
         "Then you will get more functionality inside the chatbot.\n\n"
-        f"If you have not created your own account yet, you can do it {html.link("here", "http://90.156.168.186:8000/sign-up")}.\n\n"
+        f"If you have not created your own account yet, you can do it {html.link('here', 'http://90.156.168.186:8000/sign-up')}.\n\n"
         f"Also if you have some software problem or some other questions you can contact to our support team (reddsyndicate@mail.ru)."
     )
 

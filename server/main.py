@@ -7,7 +7,6 @@ from random import random
 
 from functions.check_transaction import check_transaction
 import database.database_functions as db
-from database.database_functions import update_user_token
 
 app = FastAPI()
 
@@ -58,7 +57,8 @@ async def send_installer() -> FileResponse:
     headers = {'Access-Control-Expose-Headers': 'Content-Disposition'}
 
     return FileResponse(
-        "../server/private_resources/installer.py", filename="RS-installer.py", headers=headers)
+        "../server/private_resources/installer.py",
+        filename="RS-installer.py", headers=headers)
 
 
 @app.get("/get/instruction")
@@ -66,7 +66,8 @@ async def send_instruction() -> FileResponse:
     headers = {'Access-Control-Expose-Headers': 'Content-Disposition'}
 
     return FileResponse(
-        "../server/private_resources/instruction.pdf", filename="RS-instruction.pdf", headers=headers)
+        "../server/private_resources/instruction.pdf",
+        filename="RS-instruction.pdf", headers=headers)
 
 
 @app.post("/get/software")
@@ -82,17 +83,98 @@ async def send_software(request: Request) -> FileResponse:
         token = json["token"]
 
         if db.check_user_exists(email):
-            is_valid_user_credentials = db.check_user_credentials(email, password, token)
+            is_valid_user_credentials = db.check_user_credentials(
+                email, password, token)
 
             status_code = 200 if is_valid_user_credentials else 403
         else:
             status_code = 404
 
     if status_code == 200:
-        return FileResponse(
-            "../server/private_resources/source.zip", filename="RedditSyndicate.zip", status_code=200, headers=headers)
+        return FileResponse("../server/private_resources/source.zip",
+                            filename="RedditSyndicate.zip",
+                            status_code=200, headers=headers)
     else:
-        return FileResponse("../server/private_resources/empty.txt", status_code=status_code, headers=headers)
+        return FileResponse("../server/private_resources/empty.txt",
+                            status_code=status_code, headers=headers)
+
+
+@app.post("/get/reddit-accounts/")
+async def get_reddit_accounts(request: Request) -> JSONResponse:
+    json: dict = await request.json()
+    response_json: dict = {"result": False, "message": "Incorrect request"}
+
+    if {"email"}.issubset(json.keys()):
+        email = json['email']
+        if db.check_user_exists(email=email):
+            reddit_accounts = db.get_reddit_accounts(email)
+            response_json['result'] = True
+            response_json["massage"] = ""
+            response_json["accounts"] = [
+                {
+                    "host": acc.proxy_host,
+                    "port": acc.proxy_port,
+                    "user": acc.proxy_user,
+                    "password": acc.proxy_password
+                }
+                for acc in reddit_accounts
+            ]
+        else:
+            response_json['massage'] =\
+                'Reddit account with this email does not exist'
+    return JSONResponse(content=response_json, status_code=200)
+
+
+@app.post("/get/proxy/")
+async def get_proxy(request: Request) -> JSONResponse:
+    json: dict = await request.json()
+    response_json: dict = {"result": False, "message": "Incorrect request"}
+
+    if {"email"}.issubset(json.keys()):
+        email = json['email']
+        if db.check_reddit_account_exists(email=email):
+            proxy_info = db.get_proxy(email)
+            response_json += proxy_info
+            response_json["massage"] = ""
+            response_json['result'] = True
+        else:
+            response_json['massage'] =\
+                'Reddit account with this email does not exist'
+    return JSONResponse(content=response_json, status_code=200)
+
+
+@app.post("/get/price/")
+async def send_price(request: Request) -> JSONResponse:
+    json: dict = await request.json()
+    response_json: dict = {"result": False, "message": "Incorrect request"}
+
+    if {"email", "price"}.issubset(json.keys()):
+        email = json["email"]
+        price = json["price"]
+        new_price = price + round(random(), 3)
+
+        db.update_subscription_price(email, new_price)
+
+        response_json["result"] = True
+        response_json["price"] = new_price
+        response_json["message"] = ""
+
+    return JSONResponse(content=response_json, status_code=200)
+
+
+@app.get("/get/crypto-token/")
+async def send_crypto_token() -> JSONResponse:
+    response_json: dict = {"result": False,
+                           "message": "Crypto-token was not found"}
+
+    crypto_token = "TMPYVBkVZj5pboTAW3VqsW29QMNq6F9Bwq"
+
+    if crypto_token is not None:
+        response_json["result"] = True
+        response_json["token"] = crypto_token
+        response_json["message"] = ""
+
+    return JSONResponse(content=response_json, status_code=200)
 
 
 @app.post("/sign-up/user/")
@@ -170,15 +252,16 @@ async def check_user_code(request: Request) -> JSONResponse:
 @app.post("/update/user-token/")
 async def send_email_code(request: Request) -> JSONResponse:
     json = await request.json()
-    response_json = {"result": False, "message": "Incorrect request", "token": None}
-    
+    response_json = {"result": False,
+                     "message": "Incorrect request", "token": None}
+
     if {"email"}.issubset(json.keys()):
         email = json["email"]
 
         if not db.check_user_exists(email):
             response_json["message"] = "User with this email does not exist"
         else:
-            new_token = update_user_token(email)
+            new_token = db.update_user_token(email)
 
             response_json["result"] = True
             response_json["message"] = ""
@@ -226,7 +309,8 @@ async def check_user_credentials(request: Request) -> JSONResponse:
         token = json["token"]
 
         if db.check_user_exists(email):
-            is_valid_user_data = db.check_user_credentials(email, password, token)
+            is_valid_user_data = db.check_user_credentials(
+                email, password, token)
             if not is_valid_user_data:
                 response_json["message"] = "Incorrect credentials"
             else:
@@ -238,41 +322,8 @@ async def check_user_credentials(request: Request) -> JSONResponse:
     return JSONResponse(content=response_json, status_code=200)
 
 
-@app.post("/get/price/")
-async def send_price(request: Request) -> JSONResponse:
-    json: dict = await request.json()
-    response_json: dict = {"result": False, "message": "Incorrect request"}
-
-    if {"email", "price"}.issubset(json.keys()):
-        email = json["email"]
-        price = json["price"]
-        new_price = price + round(random(), 3)
-
-        db.update_subscription_price(email, new_price)
-
-        response_json["result"] = True
-        response_json["price"] = new_price
-        response_json["message"] = ""
-
-    return JSONResponse(content=response_json, status_code=200)
-
-
-@app.get("/get/crypto-token/")
-async def send_crupto_token() -> JSONResponse:
-    response_json: dict = {"result": False, "message": "Crytotoken was not found"}
-
-    crypto_token = "TMPYVBkVZj5pboTAW3VqsW29QMNq6F9Bwq"
-
-    if not crypto_token is None:
-        response_json["result"] = True
-        response_json["token"] = crypto_token
-        response_json["message"] = ""
-
-    return JSONResponse(content=response_json, status_code=200)
-
-
 @app.post("/add/reddit-account/")
-async def send_price(request: Request) -> JSONResponse:
+async def add_reddit_account(request: Request) -> JSONResponse:
     json: dict = await request.json()
     response_json: dict = {"result": False, "message": "Incorrect request"}
 
@@ -286,10 +337,35 @@ async def send_price(request: Request) -> JSONResponse:
         response_json["result"] = True
         response_json["price"] = new_price
         response_json["message"] = ""
+
+    return JSONResponse(content=response_json, status_code=200)
+
+
+@app.post("/set/proxy/")
+async def set_proxy(request: Request) -> JSONResponse:
+    json: dict = await request.json()
+    response_json: dict = {"result": False, "message": "Incorrect request"}
+    requirement_params =\
+        {"email", "host", "port", "user", "password"}
+
+    if requirement_params.issubset(json.keys()):
+        email = json['email']
+        proxy_info =\
+            {"proxy_" + key: json[key]
+             for key in requirement_params if key != "email"}
+
+        if db.check_reddit_account_exists(email=email):
+            db.update_proxy(email)
+            response_json += proxy_info
+            response_json['result'] = True
+            response_json["massage"] = ""
+        else:
+            response_json['massage'] =\
+                'Reddit account with this email does not exist'
 
     return JSONResponse(content=response_json, status_code=200)
 
 
 if __name__ == '__main__':
-    uvicorn.run('main:app', host="90.156.168.186", port=80, reload=True, workers=4)
-
+    uvicorn.run('main:app', host="90.156.168.186",
+                port=80, reload=True, workers=4)

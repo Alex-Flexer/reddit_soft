@@ -57,9 +57,10 @@ def check_user_credentials(email: str, password: str, token: str) -> bool:
 def check_user_subscription(email: str):
     if not check_user_exists(email):
         return False
-    
+
     subscription_end_date = get_user_by_email(email).subscription_end_date
-    return (not subscription_end_date is None) and (subscription_end_date >= date.today())
+    return (subscription_end_date is not None) and\
+           (subscription_end_date >= date.today())
 
 
 def get_user_by_email(email: str) -> User | None:
@@ -82,6 +83,20 @@ def get_all_users() -> list[Type[User]]:
     return session.query(User).all()
 
 
+def get_proxy(email: str) -> dict[str, str | int]:
+    acc = get_reddit_account_by_email(email=email)
+    proxy_dict = {'host': acc.proxy_host,
+                  'port': acc.proxy_post,
+                  'user': acc.proxy_user,
+                  'password': acc.proxy_password}
+    return proxy_dict
+
+
+def get_reddit_accounts(user_email: str) -> list[RedditAccount]:
+    user = get_user_by_email(user_email)
+    return user.reddit_accounts
+
+
 def add_new_user(email: str, user_password: str) -> bool:
     if check_user_exists(email):
         return False
@@ -97,23 +112,28 @@ def add_new_user(email: str, user_password: str) -> bool:
 
 
 def add_new_reddit_account(
-    email: str,
-    password: str,
     user_email: str,
-    proxy: str,
+    reddit_email: str,
+    reddit_password: str,
+    host: str,
+    port: int,
+    user: str,
+    password: str
 ) -> bool:
-
-    if not check_user_exists(email=user_email) or\
-            check_reddit_account_exists(email):
+    if not check_user_exists(user_email) or\
+            check_reddit_account_exists(reddit_email):
         return False
 
-    user = get_user_by_email(email=user_email)
+    user_from_db = get_user_by_email(user_email)
     session.add(RedditAccount(
-        email=email,
-        password=password,
-        owner=user,
-        proxy=proxy)
-    )
+        owner_id=user_from_db.id,
+        email=reddit_email,
+        password=reddit_password,
+        proxy_host=host,
+        proxy_port=port,
+        proxy_user=user,
+        proxy_password=password
+    ))
     session.commit()
     return True
 
@@ -172,7 +192,7 @@ def update_subscription_price(email: str, price: float) -> bool:
 def update_telegram_id(email: str, new_id: int) -> bool:
     if not check_user_exists(email):
         return False
-    
+
     session.query(User).filter_by(email=email).\
         update({"telegram_id": new_id})
 
@@ -190,6 +210,17 @@ def update_user_token(email: str) -> str | None:
 
     session.commit()
     return new_token
+
+
+def update_proxy(email, **proxy) -> bool:
+    if not check_user_exists(email):
+        return False
+
+    session.query(RedditAccount).filter_by(email=email). \
+        update(**proxy)
+
+    session.commit()
+    return True
 
 
 def delete_user_by_email(email: str) -> None:
@@ -212,8 +243,4 @@ def show_db(db_name) -> None:
 
 
 if __name__ == "__main__":
-    email = "sasha.flexer@gmail.com"
-    add_new_user("sasha.flexer@gmail.com", "0001")
-    # print(get_user_by_email("sasha.flexer@gmail.com").telegram_id)
-    # renew_subscription(email)
     show_db(User)

@@ -1,13 +1,9 @@
 import tkinter as tk
 from tkinter import messagebox
-
 from requests import ConnectionError, post
 from json import dumps
-from keyring import set_password as set_secret_value
-
-from tkinter_app.main_func_app import create_window
-
-
+from keyring import set_password as set_secret_value, get_password
+from db_funcs import send_proxy, send_credentials
 user_email: str | None = None
 user_password: str | None = None
 
@@ -18,16 +14,19 @@ def save_credentials() -> None:
     token = update_token(user_email)
     if token is None:
         return
-
     set_secret_value("user", "email", user_email)
     set_secret_value("user", "password", user_password)
     set_secret_value("user", "token", token)
 
 
+def get_user_email():
+    return get_password("user", "email")
+
+
 def update_token(email: str) -> None | str:
     data = dumps({"email": email})
     try:
-        response = post("http://127.0.0.1:8000/update/user-token/", data=data)
+        response = post("http://reddsyndicate.com/update/user-token/", data=data)
         json = response.json()
     except ConnectionError:
         messagebox.showerror("Error", "Network error")
@@ -84,17 +83,6 @@ def start_registration():
 def request_code():
     global root
 
-    response_json = send_confirmation_code(user_email)
-
-    if response_json is None or not response_json["result"]:
-        if response_json is None:
-            messagebox.showerror("Error", "Network error")
-        else:
-            messagebox.showerror("Error", response_json["message"])
-
-        root.destroy()
-        return
-
     root = tk.Tk()
     root.title("Confirm Email Code")
 
@@ -107,33 +95,89 @@ def request_code():
 
         data = dumps({"email": user_email, "code": entered_code})
         try:
-            response = post("http://127.0.0.1:8000/confirm/email-code", data=data)
+            response = post("http://reddsyndicate.com/confirm/email-code", data=data)
             response_json = response.json()
         except ConnectionError:
-            messagebox.showerror("Error", "Nerwork error")
+            messagebox.showerror("Error", "Network error")
         else:
             if response_json["result"]:
                 messagebox.showinfo("Success", "Your email code is successfully confirmed!")
                 save_credentials()
+                root.destroy()
+                login_credentials_window()
             else:
                 messagebox.showerror("Error", response_json["message"])
 
     tk.Button(root, text="Confirm", command=verify_code).grid(row=1, column=0, columnspan=2, pady=10)
 
     root.mainloop()
-    root.destroy()
-
-    create_window()
 
 
-def send_confirmation_code(email: str):
-    data = dumps({"email": email})
-    json = None
-    try:
-        response = post("http://127.0.0.1:8000/send/email-code/", data=data)
-        json = response.json()
-    finally:
-        return json
+def login_credentials_window():
+    login_window = tk.Tk()
+    login_window.title("User Credentials")
+
+    tk.Label(login_window, text="Login:").grid(row=0, column=0, padx=10, pady=5)
+    entry_login = tk.Entry(login_window)
+    entry_login.grid(row=0, column=1, padx=10, pady=5)
+
+    tk.Label(login_window, text="Password:").grid(row=1, column=0, padx=10, pady=5)
+    entry_password = tk.Entry(login_window, show="*")
+    entry_password.grid(row=1, column=1, padx=10, pady=5)
+
+    def submit_user_credentials():
+        user_login = entry_login.get()
+        user_pass = entry_password.get()
+
+        if not user_login or not user_pass:
+            messagebox.showerror("Error", "Please fill all fields")
+            return
+
+        send_credentials(user_login, user_pass)
+        login_window.destroy()
+        proxy_credentials_window()
+
+    tk.Button(login_window, text="Submit", command=submit_user_credentials).grid(row=2, column=0, columnspan=2, pady=10)
+    login_window.mainloop()
+
+
+def proxy_credentials_window():
+    proxy_window = tk.Tk()
+    proxy_window.title("Proxy Configuration")
+
+    tk.Label(proxy_window, text="Proxy Host:").grid(row=0, column=0, padx=10, pady=5)
+    entry_host = tk.Entry(proxy_window)
+    entry_host.grid(row=0, column=1, padx=10, pady=5)
+
+    tk.Label(proxy_window, text="Proxy Port:").grid(row=1, column=0, padx=10, pady=5)
+    entry_port = tk.Entry(proxy_window)
+    entry_port.grid(row=1, column=1, padx=10, pady=5)
+
+    tk.Label(proxy_window, text="Proxy User:").grid(row=2, column=0, padx=10, pady=5)
+    entry_user = tk.Entry(proxy_window)
+    entry_user.grid(row=2, column=1, padx=10, pady=5)
+
+    tk.Label(proxy_window, text="Proxy Password:").grid(row=3, column=0, padx=10, pady=5)
+    entry_password = tk.Entry(proxy_window, show="*")
+    entry_password.grid(row=3, column=1, padx=10, pady=5)
+
+    def submit_proxy_credentials():
+        proxy_host = entry_host.get()
+        proxy_port = entry_port.get()
+        proxy_user = entry_user.get()
+        proxy_password = entry_password.get()
+
+        if not all([proxy_host, proxy_port, proxy_user, proxy_password]):
+            messagebox.showerror("Error", "Please fill all fields")
+            return
+
+        send_proxy(proxy_host, proxy_port, proxy_user, proxy_password)
+
+        proxy_window.destroy()
+
+    tk.Button(proxy_window, text="Submit", command=submit_proxy_credentials).grid(row=4, column=0, columnspan=2, pady=10)
+    proxy_window.mainloop()
+
 
 
 def authenticate_user(email: str, password: str) -> dict | None:
@@ -141,7 +185,10 @@ def authenticate_user(email: str, password: str) -> dict | None:
     json = None
 
     try:
-        response = post("http://127.0.0.1:8000/login/user", data=data)
+        response = post("http://reddsyndicate.com/login/user", data=data)
         json = response.json()
     finally:
         return json
+
+if __name__ == '__main__':
+    start_registration()

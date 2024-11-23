@@ -4,7 +4,7 @@ from datetime import date
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import create_engine, ForeignKey
 
-engine = create_engine("sqlite:///database/database.db")
+engine = create_engine("sqlite:///server/database/database.db")
 
 
 class Base(DeclarativeBase):
@@ -58,9 +58,13 @@ class RedditAccount(Base):
 
     password: Mapped[Optional[str]]
 
-    proxy: Mapped[str]
+    proxy_host: Mapped[str]
 
-    status: Mapped[Optional[str]] = None
+    proxy_port: Mapped[int]
+
+    proxy_user: Mapped[str]
+
+    proxy_password: Mapped[str]
 
     def __str__(self) -> str:
         return f"{self.id} {self.email} {self.password} {self.owner.email}"

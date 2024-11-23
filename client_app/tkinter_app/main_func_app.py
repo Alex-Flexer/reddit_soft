@@ -4,9 +4,7 @@ import sys
 sys.path.insert(1, r'functions')
 
 from image_editing import uniq_tkinter
-from registration import registration
 from converters import tkinter_converters
-from posting import post_mech
 from big_post import tkinter_reddit_big_post
 from farm_carma import tkinter_karma_farm
 
@@ -55,11 +53,9 @@ def create_window():
 
     buttons = [
         ("Uniqueize photo or video", uniq_tkinter),
-        ("Registration", registration),
         ("Farm Karma", tkinter_karma_farm),
         ("Post Auto", tkinter_reddit_big_post),
-        ("post_mech", post_mech),
-        ("converters", tkinter_converters)
+        ("Converters", tkinter_converters)
     ]
 
     for (text, func) in buttons:
