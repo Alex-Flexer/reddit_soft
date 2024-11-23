@@ -4,7 +4,7 @@ from datetime import date
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import create_engine, ForeignKey
 
-engine = create_engine("sqlite:///database/database.db")
+engine = create_engine("sqlite:///server/database/database.db")
 
 
 class Base(DeclarativeBase):
