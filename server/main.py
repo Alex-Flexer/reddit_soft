@@ -104,24 +104,24 @@ async def get_reddit_accounts(request: Request) -> JSONResponse:
     json: dict = await request.json()
     response_json: dict = {"result": False, "message": "Incorrect request"}
 
+    print("email" in json)
+
     if {"email"}.issubset(json.keys()):
         email = json['email']
-        if db.check_user_exists(email=email):
+        if db.check_user_exists(email):
             reddit_accounts = db.get_reddit_accounts(email)
             response_json['result'] = True
-            response_json["massage"] = ""
+            response_json["message"] = ""
             response_json["accounts"] = [
                 {
-                    "host": acc.proxy_host,
-                    "port": acc.proxy_port,
-                    "user": acc.proxy_user,
-                    "password": acc.proxy_password
+                    "email": acc.email,
+                    "password": acc.password
                 }
                 for acc in reddit_accounts
             ]
         else:
-            response_json['massage'] =\
-                'Reddit account with this email does not exist'
+            response_json["message"] = "User with this tg-nickname does not exist"
+    print(response_json)
     return JSONResponse(content=response_json, status_code=200)
 
 
@@ -134,7 +134,7 @@ async def get_proxy(request: Request) -> JSONResponse:
         email = json['email']
         if db.check_reddit_account_exists(email=email):
             proxy_info = db.get_proxy(email)
-            response_json += proxy_info
+            response_json["proxy"] = proxy_info
             response_json["massage"] = ""
             response_json['result'] = True
         else:
@@ -211,7 +211,7 @@ async def login_user(request: Request) -> JSONResponse:
         password = json["password"]
 
         if not db.check_user_exists(email):
-            response_json["message"] = "User with this email does not exist"
+            response_json["message"] = "User with this tg-nickname does not exist"
         elif not db.check_user_password(email, password):
             response_json["message"] = "Incorrect password"
         elif not db.check_user_confirmed(email):
@@ -238,7 +238,7 @@ async def check_user_code(request: Request) -> JSONResponse:
         code = json["code"]
 
         if not db.check_user_exists(email):
-            response_json["message"] = "User with this email does not exist"
+            response_json["message"] = "User with this tg-nickname does not exist"
         elif not db.check_authorization_code(email, code):
             response_json["message"] = "Incorrect authorization code"
         else:
@@ -259,7 +259,7 @@ async def send_email_code(request: Request) -> JSONResponse:
         email = json["email"]
 
         if not db.check_user_exists(email):
-            response_json["message"] = "User with this email does not exist"
+            response_json["message"] = "User with this tg-nickname does not exist"
         else:
             new_token = db.update_user_token(email)
 
@@ -309,59 +309,44 @@ async def check_user_credentials(request: Request) -> JSONResponse:
         token = json["token"]
 
         if db.check_user_exists(email):
-            is_valid_user_data = db.check_user_credentials(
-                email, password, token)
-            if not is_valid_user_data:
+            if not db.check_user_credentials(email, password, token):
                 response_json["message"] = "Incorrect credentials"
+            elif not  db.check_user_subscription(email):
+                response_json["message"] = "Subscription expired or was not completed"
             else:
                 response_json["result"] = True
                 response_json["message"] = ""
         else:
             response_json["message"] = "Users with this email does not exists"
-
+    print(response_json)
     return JSONResponse(content=response_json, status_code=200)
 
 
 @app.post("/add/reddit-account/")
 async def add_reddit_account(request: Request) -> JSONResponse:
     json: dict = await request.json()
-    response_json: dict = {"result": False, "message": "Incorrect request"}
+    response_json: dict[str, str] = {"result": False, "message": "Incorrect request"}
 
-    if {"email", "price"}.issubset(json.keys()):
-        email = json["email"]
-        price = json["price"]
-        new_price = price + round(random(), 3)
+    params_reqirements: set[str] = {
+        "user_email",
+        "reddit_email",
+        "reddit_password",
+        "host",
+        "port",
+        "user",
+        "password"
+    }
 
-        db.update_subscription_price(email, new_price)
-
-        response_json["result"] = True
-        response_json["price"] = new_price
-        response_json["message"] = ""
-
-    return JSONResponse(content=response_json, status_code=200)
-
-
-@app.post("/set/proxy/")
-async def set_proxy(request: Request) -> JSONResponse:
-    json: dict = await request.json()
-    response_json: dict = {"result": False, "message": "Incorrect request"}
-    requirement_params =\
-        {"email", "host", "port", "user", "password"}
-
-    if requirement_params.issubset(json.keys()):
-        email = json['email']
-        proxy_info =\
-            {"proxy_" + key: json[key]
-             for key in requirement_params if key != "email"}
-
-        if db.check_reddit_account_exists(email=email):
-            db.update_proxy(email)
-            response_json += proxy_info
-            response_json['result'] = True
-            response_json["massage"] = ""
-        else:
+    if params_reqirements.issubset(json.keys()):
+        if not db.check_user_exists(json["user_email"]):
+            response_json["massage"] = "Users with this email does not exists"
+        elif db.check_reddit_account_exists(json["reddit_email"]):
             response_json['massage'] =\
                 'Reddit account with this email does not exist'
+        else:
+            db.add_new_reddit_account(**json)
+            response_json['result'] = True
+            response_json["massage"] = ""
 
     return JSONResponse(content=response_json, status_code=200)
 

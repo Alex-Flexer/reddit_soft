@@ -114,7 +114,7 @@ async function check_user_transaction(email) {
 
 async function set_price(email) {
     let price_element = document.getElementById("price");
-    let json_price = await get_user_price(email, 300);
+    let json_price = await get_user_price(email, 299);
     if (json_price == -1) {
         mark_error("Network error");
     }

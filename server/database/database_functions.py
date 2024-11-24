@@ -86,7 +86,7 @@ def get_all_users() -> list[Type[User]]:
 def get_proxy(email: str) -> dict[str, str | int]:
     acc = get_reddit_account_by_email(email=email)
     proxy_dict = {'host': acc.proxy_host,
-                  'port': acc.proxy_post,
+                  'port': acc.proxy_port,
                   'user': acc.proxy_user,
                   'password': acc.proxy_password}
     return proxy_dict
@@ -210,17 +210,6 @@ def update_user_token(email: str) -> str | None:
 
     session.commit()
     return new_token
-
-
-def update_proxy(email, **proxy) -> bool:
-    if not check_user_exists(email):
-        return False
-
-    session.query(RedditAccount).filter_by(email=email). \
-        update(**proxy)
-
-    session.commit()
-    return True
 
 
 def delete_user_by_email(email: str) -> None:
