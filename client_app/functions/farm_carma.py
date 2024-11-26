@@ -12,6 +12,7 @@ from re import findall
 from keyring import get_password
 from db_funcs import get_reddit_accounts
 from proxy import driver_proxy
+from selenium.webdriver.common.action_chains import ActionChains
 
 WebDriver = ChromeWebdriver | FirefoxWebdriver
 
