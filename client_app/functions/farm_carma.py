@@ -3,6 +3,7 @@ from tkinter import messagebox
 from datetime import datetime
 from random import randint, uniform, random
 from selenium.webdriver.common.by import By
+from selenium import webdriver
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeWebdriver
 from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebdriver
 from selenium.webdriver.remote.webelement import WebElement
