@@ -282,6 +282,7 @@ def choose_email_window(update_status_callback):
         global reddit_account_email, reddit_account_password
         reddit_account_email = email
         reddit_account_password = password
+
         messagebox.showinfo("Info", f"Selected Email: {reddit_account_email}")
         update_status_callback()
         email_window.destroy()

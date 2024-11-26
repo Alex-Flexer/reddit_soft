@@ -1,14 +1,16 @@
 import sys
 from keyring import get_password
 import tkinter as tk
+from tkinter import messagebox
 
 sys.path.insert(1, 'functions')
 
-
+from big_post_with_delay import tkinter_reddit_big_post_with_delay
+from farm_karma_with_delay import tkinter_reddit_farm_with_delay
 from image_editing import uniq_tkinter
 from converters import tkinter_converters
 from big_post import tkinter_reddit_big_post
-from farm_carma import tkinter_karma_farm
+from farm_carma import tkinter_reddit_farm
 
 from db_funcs import add_account
 
@@ -58,11 +60,13 @@ def create_window():
     label.pack(pady=10)
 
     buttons = [
-        ("Uniqueize photo or video", uniq_tkinter),
-        ("Farm Karma", tkinter_karma_farm),
+        ("Add Reddit-Account", add_reddit_account),
+        ("Farm Karma", tkinter_reddit_farm),
         ("Post Auto", tkinter_reddit_big_post),
+        ("Farm Karma with delay", tkinter_reddit_farm_with_delay),
+        ("Post Auto with delay", tkinter_reddit_big_post_with_delay),
+        ("Uniqueize photo or video", uniq_tkinter),
         ("Converters", tkinter_converters),
-        ("Add Reddit-Account", add_reddit_account)
     ]
 
     for (text, func) in buttons:
