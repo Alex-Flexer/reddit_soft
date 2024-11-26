@@ -43,11 +43,11 @@ def start_registration():
     root = tk.Tk()
     root.title("Registration")
 
-    tk.Label(root, text="Tg-nickname:").grid(row=0, column=0, padx=10, pady=5)
+    tk.Label(root, text="Tg-nickname:", font=("Modern No. 20", 18)).grid(row=0, column=0, padx=10, pady=5)
     entry_email = tk.Entry(root)
     entry_email.grid(row=0, column=1, padx=10, pady=5)
 
-    tk.Label(root, text="Password:").grid(row=1, column=0, padx=10, pady=5)
+    tk.Label(root, text="Password:", font=("Modern No. 20", 18)).grid(row=1, column=0, padx=10, pady=5)
     entry_password = tk.Entry(root, show="*")
     entry_password.grid(row=1, column=1, padx=10, pady=5)
 
@@ -77,7 +77,7 @@ def start_registration():
         else:
             messagebox.showerror("Error", response_json["message"])
 
-    tk.Button(root, text="Войти", command=submit_login_password).grid(row=2, column=0, columnspan=2, pady=10)
+    tk.Button(root, text="Войти", font=("Modern No. 20", 18), command=submit_login_password).grid(row=2, column=0, columnspan=2, pady=10)
 
     root.mainloop()
 
@@ -88,7 +88,7 @@ def request_code():
     root = tk.Tk()
     root.title("Confirm Email Code")
 
-    tk.Label(root, text="Enter your email code:").grid(row=0, column=0, padx=10, pady=5)
+    tk.Label(root, text="Enter your email code:", font=("Modern No. 20", 18)).grid(row=0, column=0, padx=10, pady=5)
     entry_code = tk.Entry(root)
     entry_code.grid(row=0, column=1, padx=10, pady=5)
 

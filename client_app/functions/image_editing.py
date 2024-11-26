@@ -12,7 +12,7 @@ def uniq_tkinter():
 
     def uniqueize_video(file_path):
         log_window.log_message(f"Starting video uniqueization for: {file_path}")
-        status_label.config(text="Uniqueizing video...")
+        status_label.config(text="Uniqueizing video...", font=("Modern No. 20", 18))
         base_name, ext = os.path.splitext(file_path)
         output_file = f"{base_name}_uniq{ext}"
         angle = random.randint(-5, 5)
@@ -130,22 +130,23 @@ def uniq_tkinter():
     root = tk.Tk()
     root.title("Uniqueizer")
 
-    tk.Label(root, text="Select file:").grid(row=0, column=0, padx=10, pady=10)
+    tk.Label(root, text="Select file:", font=("Modern No. 20", 18)).grid(row=0, column=0, padx=10, pady=10)
     entry_file = tk.Entry(root, width=50)
     entry_file.grid(row=0, column=1, padx=10, pady=10)
-    tk.Button(root, text="Browse", command=select_file).grid(row=0, column=2, padx=10, pady=10)
+    tk.Button(root, text="Browse", font=("Modern No. 20", 18), command=select_file).grid(row=0, column=2, padx=10, pady=10)
 
     function_var = tk.StringVar(value="Photo")
-    tk.Radiobutton(root, text="Uniqueize Video", variable=function_var, value="Video").grid(row=1, column=0, padx=10,
+    tk.Radiobutton(root, text="Uniqueize Video", font=("Modern No. 20", 18), variable=function_var, value="Video").grid(row=1, column=0, padx=10,
                                                                                             pady=5)
-    tk.Radiobutton(root, text="Uniqueize Photo", variable=function_var, value="Photo").grid(row=1, column=1, padx=10,
+    tk.Radiobutton(root, text="Uniqueize Photo", font=("Modern No. 20", 18), variable=function_var, value="Photo").grid(row=1, column=1, padx=10,
                                                                                             pady=5)
 
-    tk.Button(root, text="Start", command=start_uniqueization).grid(row=2, column=0, columnspan=3, pady=10)
-    status_label = tk.Label(root, text="Ready")
+    tk.Button(root, text="Start", font=("Modern No. 20", 18), command=start_uniqueization).grid(row=2, column=0, columnspan=3, pady=10)
+    status_label = tk.Label(root, text="Ready", font=("Modern No. 20", 18))
     status_label.grid(row=3, column=0, columnspan=3, pady=10)
 
     root.mainloop()
+
 
 if __name__ == "__main__":
     uniq_tkinter()

@@ -42,8 +42,8 @@ def create_window():
     scrollbar.pack(side="right", fill="y")
 
     button_config = {
-        "font": ("Arial", 14, "bold"),
-        "bg": "#4CAF50",
+        "font": ("Modern No. 20", 14, "bold"),
+        "bg": "black",
         "fg": "white",
         "activebackground": "#45a049",
         "activeforeground": "black",
@@ -54,7 +54,7 @@ def create_window():
     }
 
     label = tk.Label(scrollable_frame, text="Choose a Function",
-                     font=("Arial", 18), bg="#f0f0f0")
+                     font=("Modern No. 20", 18), bg="#f0f0f0")
     label.pack(pady=10)
 
     buttons = [

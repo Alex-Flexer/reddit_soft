@@ -264,12 +264,14 @@ def big_post(subs_path, reddit_email, reddit_password, host, port, user, passwor
 
                 sleep(randint(8, 20) * 60)
 
-    root.mainloop()
-
 
 def choose_email_window(update_status_callback):
     """Open a window for choosing an account."""
     global user_email
+    user_email = get_password("user", "email")
+
+    if user_email is None:
+        return
     accounts, msg = get_reddit_accounts(user_email)
 
     if accounts is None:
@@ -278,8 +280,8 @@ def choose_email_window(update_status_callback):
 
     def select_email(email, password):
         global reddit_account_email, reddit_account_password
-        reddit_account_email, reddit_account_password = email, password
-
+        reddit_account_email = email
+        reddit_account_password = password
         messagebox.showinfo("Info", f"Selected Email: {reddit_account_email}")
         update_status_callback()
         email_window.destroy()
@@ -287,13 +289,13 @@ def choose_email_window(update_status_callback):
     email_window = tk.Tk()
     email_window.title("Choose Email")
     tk.Label(email_window, text="Choose an Email:",
-             font=("Arial", 14)).pack(pady=10)
+             font=("Modern No. 20", 14)).pack(pady=10)
 
     for account in accounts:
         tk.Button(
             email_window,
             text=account['email'],
-            font=("Arial", 12),
+            font=("Modern No. 20", 12),
             command=lambda e=account["email"], p=account["password"]: select_email(
                 e, p)
         ).pack(pady=5)
@@ -302,12 +304,7 @@ def choose_email_window(update_status_callback):
 
 
 def tkinter_reddit_big_post():
-    """GUI for Reddit Big Post."""
     global user_email
-    user_email = get_password("user", "email")
-
-    if user_email is None:
-        return
 
     def update_status():
         if reddit_account_email:
@@ -345,26 +342,25 @@ def tkinter_reddit_big_post():
     root = tk.Tk()
     root.title("Reddit Big Poster")
 
-    tk.Label(root, text="Select Account:").grid(
+    tk.Label(root, text="Select Account:", font=("Modern No. 20", 18)).grid(
         row=0, column=0, padx=10, pady=10)
-    tk.Button(root, text="Choose Account", command=lambda: choose_email_window(
+    tk.Button(root, text="Choose Account", font=("Modern No. 20", 18), command=lambda: choose_email_window(
         update_status)).grid(row=0, column=1, padx=10, pady=10)
     label_selected_account = tk.Label(
-        root, text="No account selected", fg="red")
+        root, text="No account selected", font=("Modern No. 20", 18), fg="red")
     label_selected_account.grid(row=0, column=2, padx=10, pady=10)
 
-    tk.Label(root, text="Select subs folder:").grid(
+    tk.Label(root, text="Select subs folder:", font=("Modern No. 20", 18)).grid(
         row=1, column=0, padx=10, pady=10)
     entry_folder = tk.Entry(root, width=50)
     entry_folder.grid(row=1, column=1, padx=10, pady=10)
-    tk.Button(root, text="Browse", command=select_folder).grid(
+    tk.Button(root, text="Browse", font=("Modern No. 20", 18), command=select_folder).grid(
         row=1, column=2, padx=10, pady=10)
 
-    tk.Button(root, text="Start Posting", command=start_big_post).grid(
+    tk.Button(root, text="Start Posting", font=("Modern No. 20", 18), command=start_big_post).grid(
         row=2, column=1, padx=10, pady=10)
 
     root.mainloop()
 
 
-if __name__ == "__main__":
-    tkinter_reddit_big_post()
+tkinter_reddit_big_post()

@@ -132,18 +132,18 @@ def tkinter_karma_farm():
     root = tk.Tk()
     root.title("Karma Farmer")
 
-    tk.Label(root, text="Email:").grid(row=0, column=0, padx=10, pady=5)
+    tk.Label(root, text="Email:", font=("Modern No. 20", 18)).grid(row=0, column=0, padx=10, pady=5)
     entry_email = tk.Entry(root)
     entry_email.grid(row=0, column=1, padx=10, pady=5)
 
-    tk.Label(root, text="Password:").grid(row=1, column=0, padx=10, pady=5)
+    tk.Label(root, text="Password:", font=("Modern No. 20", 18)).grid(row=1, column=0, padx=10, pady=5)
     entry_password = tk.Entry(root, show="*")
     entry_password.grid(row=1, column=1, padx=10, pady=5)
 
-    tk.Label(root, text="Duration (seconds):").grid(row=2, column=0, padx=10, pady=5)
+    tk.Label(root, text="Duration (seconds):", font=("Modern No. 20", 18)).grid(row=2, column=0, padx=10, pady=5)
     entry_duration = tk.Entry(root)
     entry_duration.grid(row=2, column=1, padx=10, pady=5)
 
-    tk.Button(root, text="Start Farming", command=start_farming).grid(row=3, column=0, columnspan=2, pady=10)
+    tk.Button(root, text="Start Farming", font=("Modern No. 20", 18), command=start_farming).grid(row=3, column=0, columnspan=2, pady=10)
 
     root.mainloop()
