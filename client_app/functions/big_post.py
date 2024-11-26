@@ -311,8 +311,7 @@ def tkinter_reddit_big_post():
 
     def update_status():
         if reddit_account_email:
-            label_selected_account.config(text=f"Selected Account: {
-                                          reddit_account_email}", fg="green")
+            label_selected_account.config(text=f"Selected Account: {reddit_account_email}", fg="green")
         else:
             label_selected_account.config(text="No account selected", fg="red")
 
