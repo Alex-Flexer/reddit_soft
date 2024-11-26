@@ -207,6 +207,3 @@ def tkinter_reddit_farm_with_delay():
         row=3, column=1, padx=10, pady=10)
 
     root.mainloop()
-
-
-tkinter_reddit_farm()

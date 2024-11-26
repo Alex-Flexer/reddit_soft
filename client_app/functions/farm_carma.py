@@ -171,6 +171,3 @@ def tkinter_reddit_farm():
         row=1, column=1, padx=10, pady=10)
 
     root.mainloop()
-
-
-tkinter_reddit_farm()
