@@ -2,7 +2,9 @@ from tkinter import Tk, Label, Entry, Button, filedialog, messagebox
 from requests import post, ConnectionError
 from json import dumps
 from os.path import join, exists
+from os import system, mkdir, remove
 from zipfile import ZipFile
+from sys import executable
 
 
 def download_software(
@@ -24,6 +26,14 @@ def download_software(
     with open(download_path, "wb") as f:
         f.write(resp.content)
     return 200, download_path
+
+
+def remove_archive(path_to_archive: str) -> None:
+    remove(path_to_archive)
+
+
+def download_requirements(path_to_requirements: str):
+    system(f"{executable} -m pip install -r {path_to_requirements}")
 
 
 def login_user(username: str, password: str) -> tuple[bool, str]:
@@ -86,7 +96,8 @@ def file_selection_window(username: str, password: str):
             messagebox.showerror("Error", "No folder selected!")
             return
 
-        messagebox.showinfo("Information", "Download started. Please wait...")
+        messagebox.showinfo(
+            "Information", "Downloading started. Please wait...")
         code, zip_path = download_software(username, password, folder_path)
 
         if code != 200:
@@ -105,12 +116,20 @@ def file_selection_window(username: str, password: str):
             return
 
         try:
+            folder_path = join(folder_path, "RedditSyndicate")
+            mkdir(folder_path)
             extract_zip(zip_path, folder_path)
             messagebox.showinfo(
                 "Success", f"Archive successfully extracted to {folder_path}")
+
         except Exception as e:
             messagebox.showerror(
                 "Error", f"Failed to extract archive: {str(e)}")
+        else:
+            remove_archive(zip_path)
+            download_requirements(join(folder_path, "requirements.txt"))
+        finally:
+            root.destroy()
 
     root = Tk()
     root.title("Folder Selection")
