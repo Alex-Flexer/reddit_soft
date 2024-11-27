@@ -2,9 +2,26 @@ from json import dumps
 from requests import post
 
 
-def send_credentials(email: str, password: str) -> dict[str, str] | None:
+def add_account(
+        user_email: str,
+        redd_email: str,
+        redd_password: str,
+        host: str,
+        port: str,
+        password: str,
+        user: str
+) -> dict[str, str] | None:
+
     json_response = None
-    json = dumps({"email": email, "password": password})
+    json = dumps({
+        "user_email": user_email,
+        "reddit_email": redd_email,
+        "reddit_password": redd_password,
+        "host": host,
+        "port": port,
+        "user": user,
+        "password": password,
+    })
     try:
         response = post(
             "http://reddsyndicate.com/add/reddit-account/", data=json)
@@ -13,33 +30,30 @@ def send_credentials(email: str, password: str) -> dict[str, str] | None:
         return json_response
 
 
-def send_proxy(host: str, port: str, password: str, user: str) -> dict[str, str] | None:
-    json_response = None
-    json = dumps({"host": host, "port": port,
-                 "password": password, "user": user})
+def get_proxy(email: str) -> tuple[dict[str, str], str]:
+    data = dumps({"email": email})
+    result = None, "Network error"
     try:
-        response = post("http://reddsyndicate.com/set/proxy", data=json)
-        json_response = response.json()
+        response = post("http://reddsyndicate.com/get/proxy", data=data)
+        json = response.json()
+        if not json["result"]:
+            result = None, json["message"]
+        else:
+            result = json["proxy"], ""
     finally:
-        return json_response
+        return result
 
 
-def get_proxy(email: str) -> dict[str, str]:
-    json_response = None
-    json = dumps({"email": email})
-    try:
-        response = post("http://reddsyndicate.com/get/proxy", data=json)
-        json_response = response.json()
-    finally:
-        return json_response
-
-
-def get_reddit_accounts(user_email: str) -> list[dict[str, str]]:
-    json_response = None
-    json = dumps({"email": user_email})
+def get_reddit_accounts(user_email: str) -> tuple[list[dict[str, str]], str]:
+    result = None, "Network error"
+    data = dumps({"email": user_email})
     try:
         response = post(
-            "http://reddsyndicate.com/get/reddit-accounts", data=json)
-        json_response = response.json()
+            "http://reddsyndicate.com/get/reddit-accounts", data=data)
+        data = response.json()
+        if data["result"]:
+            result = data["accounts"], ""
+        else:
+            result = None, data["message"]
     finally:
-        return json_response
+        return result

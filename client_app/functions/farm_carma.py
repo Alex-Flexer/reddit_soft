@@ -1,19 +1,18 @@
-from time import sleep
-from datetime import datetime, timedelta
+import tkinter as tk
+from tkinter import messagebox
+from datetime import datetime
 from random import randint, uniform, random
-from bisect import bisect_left
-
 from selenium.webdriver.common.by import By
+from selenium import webdriver
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeWebdriver
 from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebdriver
 from selenium.webdriver.remote.webelement import WebElement
-from selenium import webdriver
-
-import tkinter as tk
-from tkinter import messagebox
-
 from login import login
-
+from re import findall
+from keyring import get_password
+from db_funcs import get_reddit_accounts
+from proxy import driver_proxy
+from selenium.webdriver.common.action_chains import ActionChains
 
 WebDriver = ChromeWebdriver | FirefoxWebdriver
 
@@ -35,7 +34,6 @@ reaction_section_list: list[ReactionSection] = []
 def reload_reaction_sections(driver: WebDriver) -> None:
     driver.get("https://reddit.com/")
     reaction_section_list.clear()
-
     sleep(4)
 
     shadow_hosts = driver.find_elements(By.CSS_SELECTOR, 'shreddit-post')
@@ -80,8 +78,6 @@ def smooth_scroll_reddit_posts(driver: WebDriver, max_scroll_height: int) -> int
 
     while current_scroll_position < max_scroll_height:
         step = randint(min_step, max_step)
-        step = step
-
         driver.execute_script(f"window.scrollBy(0, {step});")
         current_scroll_position += step
 
@@ -100,50 +96,80 @@ def smooth_scroll_reddit_posts(driver: WebDriver, max_scroll_height: int) -> int
 def farm_carma(driver: WebDriver, end_time: datetime):
     while datetime.now() < end_time:
         current_scroll_position = smooth_scroll_reddit_posts(driver, randint(1, 500))
-
         sleep(uniform(0.1, 1))
         mark_reaction(driver, uniform(0.4, 0.7), current_scroll_position)
-        sleep(uniform(0.4, 0.6))
-
-    driver.quit()
+        sleep(uniform(0.2, 1))
 
 
-def tkinter_karma_farm():
+def choose_email_window(update_status_callback):
+    """Open a window for choosing an account."""
+    global user_email
+    user_email = get_password("user", "email")
+
+    if user_email is None:
+        return
+    accounts, msg = get_reddit_accounts(user_email)
+
+    if accounts is None:
+        messagebox.showerror("Error", msg)
+        return
+
+    def select_email(email, password):
+        global reddit_account_email, reddit_account_password
+        reddit_account_email = email
+        reddit_account_password = password
+        messagebox.showinfo("Info", f"Selected Email: {reddit_account_email}")
+        update_status_callback()
+        email_window.destroy()
+
+    email_window = tk.Tk()
+    email_window.title("Choose Email")
+    tk.Label(email_window, text="Choose an Email:", font=("Modern No. 20", 14)).pack(pady=10)
+
+    for account in accounts:
+        tk.Button(
+            email_window,
+            text=account['email'],
+            font=("Modern No. 20", 12),
+            command=lambda e=account["email"], p=account["password"]: select_email(
+                e, p)
+        ).pack(pady=5)
+
+    email_window.mainloop()
+
+
+def tkinter_reddit_farm():
+    global reddit_account_email, reddit_account_password
+
+    def update_status():
+        if reddit_account_email:
+            label_selected_account.config(text=f"Selected Account: {reddit_account_email}", fg="green")
+        else:
+            label_selected_account.config(text="No account selected", fg="red")
+
     def start_farming():
-        email = entry_email.get()
-        password = entry_password.get()
-        duration = int(entry_duration.get())
-
-        if not email or not password or not duration:
-            messagebox.showerror("Error", "Please fill in all fields")
+        if not reddit_account_email:
+            messagebox.showerror("Error", "Please select an account first!")
             return
 
-        try:
-            driver = webdriver.Chrome()  # или webdriver.Firefox()
-            login(driver, email, password)
-
-            end_time = datetime.now() + timedelta(seconds=duration)
-            farm_carma(driver, end_time)
-
-            messagebox.showinfo("Success", "Farming completed!")
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
+        driver = webdriver.Chrome()  # Or other driver setup
+        if login(driver, reddit_account_email, reddit_account_password, 0, 0.8, ActionChains(driver)):
+            farm_carma(driver, datetime.now() + timedelta(hours=1))
+        else:
+            messagebox.showerror("Error", "Login failed!")
 
     root = tk.Tk()
-    root.title("Karma Farmer")
+    root.title("Reddit Karma Farmer")
 
-    tk.Label(root, text="Email:").grid(row=0, column=0, padx=10, pady=5)
-    entry_email = tk.Entry(root)
-    entry_email.grid(row=0, column=1, padx=10, pady=5)
+    tk.Label(root, text="Select Account:", font=("Modern No. 20", 18)).grid(
+        row=0, column=0, padx=10, pady=10)
+    tk.Button(root, text="Choose Account", font=("Modern No. 20", 18), command=lambda: choose_email_window(
+        update_status)).grid(row=0, column=1, padx=10, pady=10)
+    label_selected_account = tk.Label(
+        root, text="No account selected", font=("Modern No. 20", 18), fg="red")
+    label_selected_account.grid(row=0, column=2, padx=10, pady=10)
 
-    tk.Label(root, text="Password:").grid(row=1, column=0, padx=10, pady=5)
-    entry_password = tk.Entry(root, show="*")
-    entry_password.grid(row=1, column=1, padx=10, pady=5)
-
-    tk.Label(root, text="Duration (seconds):").grid(row=2, column=0, padx=10, pady=5)
-    entry_duration = tk.Entry(root)
-    entry_duration.grid(row=2, column=1, padx=10, pady=5)
-
-    tk.Button(root, text="Start Farming", command=start_farming).grid(row=3, column=0, columnspan=2, pady=10)
+    tk.Button(root, text="Start Farming", font=("Modern No. 20", 18), command=start_farming).grid(
+        row=1, column=1, padx=10, pady=10)
 
     root.mainloop()

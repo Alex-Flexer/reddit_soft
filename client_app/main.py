@@ -4,6 +4,10 @@ from keyring import get_password as get_secret_value
 from requests import post
 from json import dumps
 
+from sys import path
+
+path.insert(1, "tkinter_app")
+
 from tkinter_app import start_registration, create_window
 
 
@@ -25,13 +29,16 @@ def main():
 
     if not email or not password or not token:
         start_registration()
-        return
     else:
         response_json = check_user(email, password, token)
         if response_json is None:
             messagebox.showerror("Error", "Network error")
         elif not response_json["result"]:
-            messagebox.showerror("Error", response_json["message"])
+            if response_json["message"] ==\
+                    "Subscription expired or was not completed":
+                messagebox.showerror("Error", response_json["message"])
+            else:
+                start_registration()
         else:
             create_window()
 

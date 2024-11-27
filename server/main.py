@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from random import random
+from os.path import exists as check_path_exists
 
 from functions.check_transaction import check_transaction
 import database.database_functions as db
@@ -77,25 +78,23 @@ async def send_software(request: Request) -> FileResponse:
     json: dict = await request.json()
     status_code = 400
 
-    if {"email", "password", "token"}.issubset(json.keys()):
+    if {"email", "password"}.issubset(json.keys()):
         email = json["email"]
         password = json["password"]
-        token = json["token"]
 
         if db.check_user_exists(email):
-            is_valid_user_credentials = db.check_user_credentials(
-                email, password, token)
+            is_valid_password = db.check_user_password(email, password)
 
-            status_code = 200 if is_valid_user_credentials else 403
+            status_code = 200 if is_valid_password else 403
         else:
             status_code = 404
 
     if status_code == 200:
-        return FileResponse("../server/private_resources/source.zip",
+        return FileResponse("./private_resources/source.zip",
                             filename="RedditSyndicate.zip",
                             status_code=200, headers=headers)
     else:
-        return FileResponse("../server/private_resources/empty.txt",
+        return FileResponse("./private_resources/empty.txt",
                             status_code=status_code, headers=headers)
 
 
