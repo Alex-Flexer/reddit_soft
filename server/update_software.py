@@ -1,6 +1,7 @@
 from os import system, mkdir
-from os.path import exists, join
+from os.path import join
 import shutil
+
 
 def obfuscate_client_app(path_to_obfuscated_file, path_to_file):
     system(f"pyarmor gen -O {path_to_obfuscated_file} -r {path_to_file}")
@@ -14,6 +15,7 @@ def save_requirements(path_to_requirements_file):
     venv_pip_path = r"pip"
     system(f"{venv_pip_path} freeze > {path_to_requirements_file}")
 
+
 def remove_dist_folder(path_to_dist_folder):
     shutil.rmtree(path_to_dist_folder)
 
@@ -26,12 +28,6 @@ def main():
     # path_to_obfuscated_client_app = "server/private_resources/dist"
     path_to_obfuscated_client_app = path_to_client_app#"server/private_resources/"
     path_to_zipped_client_app = 'server/private_resources/source'
-
-    if not exists(path_to_obfuscated_client_app):
-        add_dist_folder(path_to_obfuscated_client_app)
-
-    # obfuscate_client_app(path_to_obfuscated_client_app, path_to_client_app)
-    # save_requirements(join(path_to_obfuscated_client_app, "client_app", "requirements.txt"))
 
     zip_directory(path_to_obfuscated_client_app, path_to_zipped_client_app)
 

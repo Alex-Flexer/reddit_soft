@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from datetime import datetime
+from time import time
 from random import randint, uniform, random
 from selenium.webdriver.common.by import By
 from selenium import webdriver
