@@ -1,18 +1,18 @@
-import sys
 from keyring import get_password
 import tkinter as tk
 from tkinter import messagebox
 
+import sys
+
 sys.path.insert(1, 'functions')
 
-from big_post_with_delay import tkinter_reddit_big_post_with_delay
-from farm_karma_with_delay import tkinter_reddit_farm_with_delay
-from image_editing import uniq_tkinter
-from converters import tkinter_converters
-from big_post import tkinter_reddit_big_post
-from farm_carma import tkinter_reddit_farm
-
 from db_funcs import add_account
+from farm_carma import tkinter_reddit_farm
+from big_post import tkinter_reddit_big_post
+from converters import tkinter_converters
+from image_editing import uniq_tkinter
+from farm_karma_with_delay import tkinter_reddit_farm_with_delay
+from big_post_with_delay import tkinter_reddit_big_post_with_delay
 
 
 def create_window():
@@ -88,8 +88,8 @@ def add_reddit_account():
 
     tk.Label(login_window, text="Password:").grid(
         row=1, column=0, padx=10, pady=5)
-    entry_password = tk.Entry(login_window, show="*")
-    entry_password.grid(row=1, column=1, padx=10, pady=5)
+    entry_reddit_password = tk.Entry(login_window, show="*")
+    entry_reddit_password.grid(row=1, column=1, padx=10, pady=5)
 
     tk.Label(login_window, text="Proxy Host:").grid(
         row=2, column=0, padx=10, pady=5)
@@ -113,7 +113,7 @@ def add_reddit_account():
 
     def submit_account_credentials():
         login = entry_login.get()
-        password = entry_password.get()
+        password = entry_reddit_password.get()
         proxy_host = entry_host.get()
         proxy_port = entry_port.get()
         proxy_user = entry_user.get()

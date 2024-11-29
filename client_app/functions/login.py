@@ -41,10 +41,7 @@ def rand_sleep() -> None:
     sleep(uniform(0.1, 1))
 
 
-def login(driver: WebDriver, username: str, password: str, speed: int = 0, accuracy: float = 1.0, mouse: ActionChains=None) -> bool:
-    if mouse is None:
-        mouse = ActionChains(driver)
-
+def login(mouse: ActionChains, driver: WebDriver, username: str, password: str, speed: int = 0, accuracy: float = 1.0) -> bool:
     driver.get("https://www.reddit.com/login/")
 
     sleep(3)

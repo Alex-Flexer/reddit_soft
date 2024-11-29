@@ -1,14 +1,22 @@
-from win32com.client import Dispatch
-from sys import executable
+from seleniumwire import webdriver
 
 
-def create_shortcut(file_name: str, target: str, work_dir: str, arguments: str = ''):
-    shell = Dispatch('WScript.Shell')
-    shortcut = shell.CreateShortCut(file_name)
-    shortcut.TargetPath = target
-    # shortcut.Arguments = arguments
-    shortcut.WorkingDirectory = work_dir
-    # shortcut.save()
+def driver_proxy(proxy_host, proxy_port, proxy_user, proxy_password):
+    proxy_options = {
+        'proxy': {
+            'http': f'http://{proxy_user}:{proxy_password}@{proxy_host}:{proxy_port}',
+            'https': f'http://{proxy_user}:{proxy_password}@{proxy_host}:{proxy_port}',
+            'no_proxy': 'localhost,127.0.0.1'
+        }
+    }
+
+    driver = webdriver.Chrome(seleniumwire_options=proxy_options)
+
+    return driver
 
 
-create_shortcut("label.url", executable, "/")
+host = "139.171.59.194"
+port = "50100"
+user = "zavalishinn26"
+password = "uKvcZHash5"
+driver_proxy(host, port, user, password)

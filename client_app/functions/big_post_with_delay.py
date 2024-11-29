@@ -1,3 +1,5 @@
+from proxy import driver_proxy
+from db_funcs import get_reddit_accounts, get_proxy
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from time import sleep
@@ -12,6 +14,8 @@ from random import randint
 from datetime import datetime, timedelta
 from time import sleep
 import threading
+
+from selenium.webdriver import Chrome
 
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -33,9 +37,6 @@ from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebdriver
 from sys import path
 
 path.insert(1, "functions")
-
-from db_funcs import get_reddit_accounts, get_proxy
-from proxy import driver_proxy
 
 
 WebDriver = ChromeWebdriver | FirefoxWebdriver
@@ -115,7 +116,7 @@ def post(
     submit_button: WebElement = driver.find_element(
         By.CSS_SELECTOR, PATTERN_SUBMIT_BUTTON)
 
-    if not flair is None:
+    if flair is not None:
         original_flair = flair.lower().strip()
 
         click(mouse, flair_button_span)
@@ -142,8 +143,9 @@ def post(
             click(mouse, required_flair_element)
             rand_sleep()
 
-            add_flair_button = faceplate_dialog_element_root.find_element(
-                By.CSS_SELECTOR, PATTERN_ADD_FLAIR_BUTTON)
+            add_flair_button = faceplate_dialog_element_root.\
+                find_element(By.CSS_SELECTOR, PATTERN_ADD_FLAIR_BUTTON)
+
             click(mouse, add_flair_button)
             rand_sleep()
 
@@ -155,21 +157,31 @@ def post(
         continue
 
     if "submit" in driver.current_url:
-        error_message = driver.find_element(By.CSS_SELECTOR, PATTERN_ERROR_MESSAGE). \
-            shadow_root.find_elements(By.CSS_SELECTOR, "p.m-0")
+        error_message =\
+            driver.\
+            find_element(By.CSS_SELECTOR, PATTERN_ERROR_MESSAGE).shadow_root.\
+            find_elements(By.CSS_SELECTOR, "p.m-0")
 
         if error_message != [] and error_message[0].text != "":
             return error_message.text, False
     else:
-        return f"was successfully posted", True
+        return "was successfully posted", True
 
 
-def big_post(subs_path, reddit_email, reddit_password, host, port, user, password):
-    driver: WebDriver = driver_proxy(host, port, user, password)
+def big_post(
+        subs_path: str,
+        reddit_email: str,
+        reddit_password: str,
+        host: str,
+        port: int,
+        user: str,
+        password: str
+) -> None:
+    driver: WebDriver = Chrome()
     log_window = LogWindow()
 
     mouse = ActionChains(driver)
-    is_logged_in = login(driver, reddit_email, reddit_password, 0, 0.8, mouse)
+    is_logged_in = login(mouse, driver, reddit_email, reddit_password, 0, 0.8)
     if not is_logged_in:
         log_window.log_message("Unknown login error")
         return
@@ -182,90 +194,103 @@ def big_post(subs_path, reddit_email, reddit_password, host, port, user, passwor
         subreddit_name = subdir
 
         good_subdir: bool = True
-        if os.path.isdir(sub_path):
-            used_path = os.path.join(sub_path, 'used')
+        if not os.path.isdir(sub_path):
+            continue
 
-            if not os.path.exists(used_path):
-                os.makedirs(used_path)
+        used_path = os.path.join(sub_path, 'used')
 
-            titles_path: str | None = None
-            flairs_path: str | None = None
+        if not os.path.exists(used_path):
+            os.mkdir(used_path)
 
-            titles: list[str] = []
-            flairs: list[str] | None = None
+        titles_path: str | None = None
+        flairs_path: str | None = None
 
-            images_paths: list[str] = []
+        titles: list[str] = []
+        flairs: list[str] | None = None
 
-            for file in os.listdir(sub_path):
-                file_path = os.path.join(sub_path, file)
+        images_paths: list[str] = []
 
-                if file.title().lower() == "titles.txt":
-                    if len(titles) > 0:
-                        log_window.log_message(
-                            subreddit_name, "file must contain only one titles file")
-                        good_subdir = False
-                        break
+        for file in os.listdir(sub_path):
+            file_path = os.path.join(sub_path, file)
 
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        titles = f.read().strip().split('\n')
-                        titles_path = file_path
+            if file.title().lower() == "titles.txt":
+                if len(titles) > 0:
+                    log_window.log_message(
+                        subreddit_name, "file must contain only one titles file")
+                    good_subdir = False
+                    break
 
-                elif file.title().lower() == "flairs.txt":
-                    if not flairs is None:
-                        log_window.log_message(
-                            subreddit_name, "file must contain not more one flairs file")
-                        good_subdir = False
-                        break
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    titles = f.read().strip().split('\n')
+                    titles_path = file_path
 
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        flairs_not_striped = f.read().strip().split('\n')
-                        flairs = list(
-                            map(lambda flair: flair.strip(), flairs_not_striped))
-                        flairs_path = file_path
+            elif file.title().lower() == "flairs.txt":
+                if not flairs is None:
+                    log_window.log_message(
+                        subreddit_name, "file must contain not more one flairs file")
+                    good_subdir = False
+                    break
 
-                elif file.endswith(".JPG") or file.endswith(".png") or file.endswith(".jpeg"):
-                    images_paths.append(file_path)
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    flairs_not_striped = f.read().strip().split('\n')
+                    flairs = list(
+                        map(lambda flair: flair.strip(), flairs_not_striped))
+                    flairs_path = file_path
 
-            if not good_subdir:
-                continue
+            elif file.endswith(".JPG") or file.endswith(".png") or file.endswith(".jpeg"):
+                images_paths.append(file_path)
 
-            if len(images_paths) != len(titles):
-                log_window.log_message(
-                    subreddit_name, "amount of images do not match with amount of titles")
-            if not flairs is None and len(images_paths) != len(flairs):
-                log_window.log_message(
-                    subreddit_name, "amount of images do not match with amount of flairs")
-            if not flairs is None and len(titles) != len(flairs):
-                log_window.log_message(
-                    subreddit_name, "amount of titles do not match with amount of flairs")
+        if not good_subdir:
+            continue
 
-            if (not flairs is None and len(titles) != len(flairs)) or len(images_paths) != len(titles):
-                continue
+        if len(images_paths) != len(titles):
+            log_window.log_message(
+                subreddit_name, "amount of images do not match with amount of titles")
+        if flairs is not None and len(images_paths) != len(flairs):
+            log_window.log_message(
+                subreddit_name, "amount of images do not match with amount of flairs")
+        if flairs is not None and len(titles) != len(flairs):
+            log_window.log_message(
+                subreddit_name, "amount of titles do not match with amount of flairs")
 
-            not_posted_titles: list[str] = []
-            for ind, image_path in enumerate(images_paths):
-                log_window.log_message(
-                    f"{subreddit_name}->{titles[ind]}: ", end="")
-                try:
-                    message, is_successfully_posted = post(mouse, driver, subreddit_name, image_path,
-                                                           titles[ind], flairs[ind] if flairs else None)
-                    log_window.log_message(titles[ind], message)
-                    if is_successfully_posted:
-                        image_name = os.path.basename(image_path)
-                        move(image_path, os.path.join(
-                            sub_path, "used", image_name))
-                except Exception as e:
-                    log_window.log_message(str(e).lower())
-                    not_posted_titles.append(titles[ind])
+        if (flairs is not None and len(titles) != len(flairs)) or len(images_paths) != len(titles):
+            continue
 
-            with open(titles_path, 'w', encoding='utf-8') as f:
+        not_posted_titles: list[str] = []
+        for ind, image_path in enumerate(images_paths):
+            log_window.log_message(
+                f"{subreddit_name}->{titles[ind]}: ", end="")
+            try:
+                message, is_successfully_posted =\
+                    post(
+                        mouse=mouse,
+                        driver=driver,
+                        subreddit=subreddit_name,
+                        file_path=image_path,
+                        title=titles[ind],
+                        flair=flairs[ind] if flairs else None
+                    )
+
+                log_window.log_message(titles[ind], message)
+                if is_successfully_posted:
+                    image_name = os.path.basename(image_path)
+                    move(
+                        image_path,
+                        os.path.join(sub_path, "used", image_name)
+                    )
+
+            except Exception as e:
+                log_window.log_message(str(e).lower())
+                not_posted_titles.append(titles[ind])
+
+        with open(titles_path, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(not_posted_titles))
+
+        if not flairs is None:
+            with open(flairs_path, 'w', encoding='utf-8') as f:
                 f.write('\n'.join(not_posted_titles))
 
-            if not flairs is None:
-                with open(flairs_path, 'w', encoding='utf-8') as f:
-                    f.write('\n'.join(not_posted_titles))
-
-                sleep(randint(8, 20) * 60)
+            sleep(randint(8, 20) * 60)
 
 
 def choose_email_window(update_status_callback):
@@ -312,7 +337,8 @@ def tkinter_reddit_big_post_with_delay():
 
     def update_status():
         if reddit_account_email:
-            label_selected_account.config(text=f"Selected Account: {reddit_account_email}", fg="green")
+            label_selected_account.config(text=f"Selected Account: {
+                                          reddit_account_email}", fg="green")
         else:
             label_selected_account.config(text="No account selected", fg="red")
 
@@ -324,7 +350,8 @@ def tkinter_reddit_big_post_with_delay():
 
     def wait_until(start_time):
         now = datetime.now()
-        start_datetime = datetime.combine(now.date(), datetime.strptime(start_time, "%H:%M").time())
+        start_datetime = datetime.combine(
+            now.date(), datetime.strptime(start_time, "%H:%M").time())
         if start_datetime < now:
             start_datetime += timedelta(days=1)
         wait_seconds = (start_datetime - now).total_seconds()

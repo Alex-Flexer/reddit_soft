@@ -1,3 +1,4 @@
+from db_funcs import get_reddit_accounts, get_proxy
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from time import sleep
@@ -9,6 +10,8 @@ import win32con
 from io import BytesIO
 from PIL import Image
 from random import randint
+
+from selenium.webdriver import Chrome
 
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -31,9 +34,7 @@ from sys import path
 
 path.insert(1, "functions")
 
-from db_funcs import get_reddit_accounts, get_proxy
-from proxy import driver_proxy
-
+# from proxy import driver_proxy
 
 WebDriver = ChromeWebdriver | FirefoxWebdriver
 
@@ -49,10 +50,11 @@ PATTERN_ERROR_MESSAGE =\
 PATTERN_FLAIR_BUTTON =\
     "#reddit-post-flair-button > span:nth-child(1) > span:nth-child(1)"
 PATTERN_SUBMIT_BUTTON = "#submit-post-button"
-PATTERN_TITLE_INPUT = "faceplate-textarea-input.rounded-[20px]"
+PATTERN_TITLE_INPUT = "/html/body/shreddit-app/div[1]/div[1]/div/main/r-post-composer-form/section/div[1]/faceplate-tracker/faceplate-textarea-input"
 PATTERN_ADD_FLAIR_BUTTON = "#post-flair-modal-apply-button"
 PATTERN_FLAIR_SPANS =\
     "div.flex-col > div[name=flairId] > faceplate-radio-input > span"
+PATTERN_SELECT_TYPE = "/html/body/shreddit-app/div[1]/div[1]/div/main/r-post-composer-form/r-post-type-select"
 
 
 def copy_image_to_clipboard(image_path: str):
@@ -84,11 +86,29 @@ def post(
 
     current_type = findall(r".*\?type=([A-Z]+)", driver.current_url)
 
-    if "IMAGE" in current_type:
-        return "unable to use IMAGE type", False
+    if "IMAGE" not in current_type:
+        type_selection: list[WebElement] = driver.find_element(
+            By.XPATH, PATTERN_SELECT_TYPE
+        ).shadow_root.find_elements(
+            By.CSS_SELECTOR, "faceplate-tracker"
+        )
+
+        choose_type_flag = False
+        for type_element in type_selection:
+            if "images" in type_element.text.lower():
+                click(mouse, type_element)
+                rand_sleep()
+                choose_type_flag = True
+
+        if not choose_type_flag:
+            return "unable to use image type"
+
+    current_type = findall(r".*\?type=([A-Z]+)", driver.current_url)
+    if "IMAGE" not in current_type:
+        return "unable to use image type"
 
     title_input_element = driver.find_element(
-        By.CSS_SELECTOR, PATTERN_TITLE_INPUT)
+        By.XPATH, PATTERN_TITLE_INPUT)
 
     click(mouse, title_input_element)
     rand_sleep()
@@ -96,7 +116,13 @@ def post(
     slow_typing(title, mouse, 7, 0.9)
     rand_sleep()
 
-    mouse.key_down(Keys.CONTROL).send_keys("v").key_up(Keys.CONTROL).perform()
+    mouse.key_down(Keys.CONTROL).key_down("v").perform()
+
+    sleep(0.1)
+
+    mouse.key_up(Keys.CONTROL).perform()
+    mouse.key_up("v").perform()
+
     sleep(4)
 
     flair_button_shadow_root: ShadowRoot = driver.find_element(
@@ -112,7 +138,7 @@ def post(
     submit_button: WebElement = driver.find_element(
         By.CSS_SELECTOR, PATTERN_SUBMIT_BUTTON)
 
-    if not flair is None:
+    if flair is not None:
         original_flair = flair.lower().strip()
 
         click(mouse, flair_button_span)
@@ -135,14 +161,14 @@ def post(
 
         if required_flair_element is None:
             return f"flair \"{flair}\" was not found", False
-        else:
-            click(mouse, required_flair_element)
-            rand_sleep()
 
-            add_flair_button = faceplate_dialog_element_root.find_element(
-                By.CSS_SELECTOR, PATTERN_ADD_FLAIR_BUTTON)
-            click(mouse, add_flair_button)
-            rand_sleep()
+        click(mouse, required_flair_element)
+        rand_sleep()
+
+        add_flair_button = faceplate_dialog_element_root.find_element(
+            By.CSS_SELECTOR, PATTERN_ADD_FLAIR_BUTTON)
+        click(mouse, add_flair_button)
+        rand_sleep()
 
     click(mouse, submit_button)
     rand_sleep()
@@ -152,24 +178,33 @@ def post(
         continue
 
     if "submit" in driver.current_url:
-        error_message = driver.find_element(By.CSS_SELECTOR, PATTERN_ERROR_MESSAGE). \
+        error_message =\
+            driver.find_element(By.CSS_SELECTOR, PATTERN_ERROR_MESSAGE).\
             shadow_root.find_elements(By.CSS_SELECTOR, "p.m-0")
 
         if error_message != [] and error_message[0].text != "":
             return error_message.text, False
+        else:
+            return "unknown post error", False
     else:
-        return f"was successfully posted", True
+        return "was successfully posted", True
 
 
 def big_post(subs_path, reddit_email, reddit_password, host, port, user, password):
-    driver: WebDriver = driver_proxy(host, port, user, password)
+    # driver: WebDriver = driver_proxy(host, port, user, password)
     log_window = LogWindow()
+    driver: WebDriver = Chrome()
 
     mouse = ActionChains(driver)
-    is_logged_in = login(driver, reddit_email, reddit_password, 0, 0.8, mouse)
-    if not is_logged_in:
-        log_window.log_message("Unknown login error")
-        return
+    try:
+        is_logged_in = login(mouse, driver, reddit_email,
+                             reddit_password, 0, 0.8)
+    except Exception as e:
+        log_window.log_message(str(e))
+    else:
+        if not is_logged_in:
+            log_window.log_message("Unknown login error")
+            return
 
     log_window.log_message("Successfully logged in")
 
@@ -196,7 +231,9 @@ def big_post(subs_path, reddit_email, reddit_password, host, port, user, passwor
             for file in os.listdir(sub_path):
                 file_path = os.path.join(sub_path, file)
 
-                if file.title().lower() == "titles.txt":
+                file_title: str = file.title().lower()
+
+                if file_title == "titles.txt":
                     if len(titles) > 0:
                         log_window.log_message(
                             subreddit_name, "file must contain only one titles file")
@@ -207,62 +244,87 @@ def big_post(subs_path, reddit_email, reddit_password, host, port, user, passwor
                         titles = f.read().strip().split('\n')
                         titles_path = file_path
 
-                elif file.title().lower() == "flairs.txt":
-                    if not flairs is None:
+                elif file_title == "flairs.txt":
+                    if flairs is not None:
                         log_window.log_message(
                             subreddit_name, "file must contain not more one flairs file")
                         good_subdir = False
                         break
 
                     with open(file_path, 'r', encoding='utf-8') as f:
-                        flairs_not_striped = f.read().strip().split('\n')
-                        flairs = list(
-                            map(lambda flair: flair.strip(), flairs_not_striped))
+                        flairs: list[str] = f.read().strip().split('\n')
+                        flairs = [flair.strip() for flair in flairs]
                         flairs_path = file_path
 
-                elif file.endswith(".JPG") or file.endswith(".png") or file.endswith(".jpeg"):
+                elif file_title.endswith((".jpg", ".png", ".jpeg")):
                     images_paths.append(file_path)
 
             if not good_subdir:
                 continue
 
+            flag = True
+
             if len(images_paths) != len(titles):
                 log_window.log_message(
                     subreddit_name, "amount of images do not match with amount of titles")
-            if not flairs is None and len(images_paths) != len(flairs):
+                flag = False
+
+            if flairs is not None and len(images_paths) != len(flairs):
                 log_window.log_message(
                     subreddit_name, "amount of images do not match with amount of flairs")
-            if not flairs is None and len(titles) != len(flairs):
+                flag = False
+
+            if flairs is not None and len(titles) != len(flairs):
                 log_window.log_message(
                     subreddit_name, "amount of titles do not match with amount of flairs")
+                flag = False
 
-            if (not flairs is None and len(titles) != len(flairs)) or len(images_paths) != len(titles):
+            if titles_path is None:
+                log_window.log_message(
+                    subreddit_name, "there is not file \"titles.txt\"")
+                flag = False
+
+            if not flag:
                 continue
 
             not_posted_titles: list[str] = []
+            not_user_flairs: list[str] = []
             for ind, image_path in enumerate(images_paths):
                 log_window.log_message(
                     f"{subreddit_name}->{titles[ind]}: ", end="")
                 try:
-                    message, is_successfully_posted = post(mouse, driver, subreddit_name, image_path,
-                                                           titles[ind], flairs[ind] if flairs else None)
+                    message, is_successfully_posted =\
+                        post(mouse,
+                             driver,
+                             subreddit_name,
+                             image_path,
+                             titles[ind],
+                             flairs[ind] if flairs else None)
+
                     log_window.log_message(titles[ind], message)
                     if is_successfully_posted:
                         image_name = os.path.basename(image_path)
                         move(image_path, os.path.join(
                             sub_path, "used", image_name))
+                    else:
+                        not_posted_titles.append(titles[ind])
+                        if flairs is not None:
+                            not_user_flairs.append(flairs[ind])
                 except Exception as e:
                     log_window.log_message(str(e).lower())
                     not_posted_titles.append(titles[ind])
+                    if flairs is not None:
+                        not_user_flairs.append(flairs[ind])
+
+                # sleep(randint(8, 20) * 60)
+                sleep(5)
 
             with open(titles_path, 'w', encoding='utf-8') as f:
                 f.write('\n'.join(not_posted_titles))
 
-            if not flairs is None:
+            if flairs is not None:
                 with open(flairs_path, 'w', encoding='utf-8') as f:
-                    f.write('\n'.join(not_posted_titles))
-
-                sleep(randint(8, 20) * 60)
+                    f.write('\n'.join(not_user_flairs))
 
 
 def choose_email_window(update_status_callback):
@@ -309,7 +371,8 @@ def tkinter_reddit_big_post():
 
     def update_status():
         if reddit_account_email:
-            label_selected_account.config(text=f"Selected Account: {reddit_account_email}", fg="green")
+            label_selected_account.config(text=f"Selected Account: {
+                                          reddit_account_email}", fg="green")
         else:
             label_selected_account.config(text="No account selected", fg="red")
 
@@ -362,3 +425,7 @@ def tkinter_reddit_big_post():
         row=2, column=1, padx=10, pady=10)
 
     root.mainloop()
+
+
+if __name__ == "__main__":
+    tkinter_reddit_big_post()
