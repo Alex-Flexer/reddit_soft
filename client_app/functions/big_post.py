@@ -1,9 +1,10 @@
-from db_funcs import get_reddit_accounts, get_proxy
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from time import sleep
 from datetime import datetime, timedelta
 import os
+
+from threading import Thread
 from shutil import move
 import win32clipboard as clip
 import win32con
@@ -11,6 +12,8 @@ from io import BytesIO
 from PIL import Image
 from random import randint
 
+
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver import Chrome
 
 from selenium.webdriver.common.keys import Keys
@@ -34,7 +37,9 @@ from sys import path
 
 path.insert(1, "functions")
 
+from db_funcs import get_reddit_accounts, get_proxy
 # from proxy import driver_proxy
+
 
 WebDriver = ChromeWebdriver | FirefoxWebdriver
 
@@ -116,12 +121,7 @@ def post(
     slow_typing(title, mouse, 7, 0.9)
     rand_sleep()
 
-    mouse.key_down(Keys.CONTROL).key_down("v").perform()
-
-    sleep(0.1)
-
-    mouse.key_up(Keys.CONTROL).perform()
-    mouse.key_up("v").perform()
+    title_input_element.send_keys(Keys.CONTROL, 'v')
 
     sleep(4)
 
@@ -142,7 +142,7 @@ def post(
         original_flair = flair.lower().strip()
 
         click(mouse, flair_button_span)
-        rand_sleep()
+        sleep(5.82)
 
         faceplate_dialog_element_root = flair_button_shadow_root.find_element(
             By.CSS_SELECTOR, ".p-0")
@@ -174,39 +174,43 @@ def post(
     rand_sleep()
 
     start_time = datetime.now()
-    while start_time - datetime.now() < timedelta(seconds=20) and "submit" in driver.current_url:
+    while datetime.now() - start_time < timedelta(seconds=20) and "submit" in driver.current_url:
         continue
 
     if "submit" in driver.current_url:
-        error_message =\
+        error_message: list[WebElement] =\
             driver.find_element(By.CSS_SELECTOR, PATTERN_ERROR_MESSAGE).\
             shadow_root.find_elements(By.CSS_SELECTOR, "p.m-0")
 
-        if error_message != [] and error_message[0].text != "":
-            return error_message.text, False
+        print(error_message[0])
+
+        if len(error_message) != 0 and error_message[0].text != "":
+            return error_message[0].text, False
         else:
             return "unknown post error", False
     else:
         return "was successfully posted", True
 
 
-def big_post(subs_path, reddit_email, reddit_password, host, port, user, password):
+def big_post(logger, subs_path, reddit_email, reddit_password, host, port, user, password):
     # driver: WebDriver = driver_proxy(host, port, user, password)
-    log_window = LogWindow()
-    driver: WebDriver = Chrome()
+    options = Options()
+    # options.add_argument("--headless")
+    driver: WebDriver = Chrome(options=options)
 
     mouse = ActionChains(driver)
     try:
         is_logged_in = login(mouse, driver, reddit_email,
                              reddit_password, 0, 0.8)
     except Exception as e:
-        log_window.log_message(str(e))
+        logger.log_message(str(e))
+        return
     else:
         if not is_logged_in:
-            log_window.log_message("Unknown login error")
+            logger.log_message("Unknown login error")
             return
 
-    log_window.log_message("Successfully logged in")
+    logger.log_message("Successfully logged in")
 
     for subdir in os.listdir(subs_path):
         sub_path = os.path.join(subs_path, subdir)
@@ -235,7 +239,7 @@ def big_post(subs_path, reddit_email, reddit_password, host, port, user, passwor
 
                 if file_title == "titles.txt":
                     if len(titles) > 0:
-                        log_window.log_message(
+                        logger.log_message(
                             subreddit_name, "file must contain only one titles file")
                         good_subdir = False
                         break
@@ -246,7 +250,7 @@ def big_post(subs_path, reddit_email, reddit_password, host, port, user, passwor
 
                 elif file_title == "flairs.txt":
                     if flairs is not None:
-                        log_window.log_message(
+                        logger.log_message(
                             subreddit_name, "file must contain not more one flairs file")
                         good_subdir = False
                         break
@@ -264,25 +268,32 @@ def big_post(subs_path, reddit_email, reddit_password, host, port, user, passwor
 
             flag = True
 
+            if "" in titles:
+                titles.remove("")
+            if flairs is not None and "" in flairs:
+                flairs.remove("")
+
             if len(images_paths) != len(titles):
-                log_window.log_message(
-                    subreddit_name, "amount of images do not match with amount of titles")
+                logger.log_message(
+                    f"{subreddit_name}:", "amount of images do not match with amount of titles")
                 flag = False
 
             if flairs is not None and len(images_paths) != len(flairs):
-                log_window.log_message(
-                    subreddit_name, "amount of images do not match with amount of flairs")
+                logger.log_message(
+                    f"{subreddit_name}:", "amount of images do not match with amount of flairs")
                 flag = False
 
             if flairs is not None and len(titles) != len(flairs):
-                log_window.log_message(
-                    subreddit_name, "amount of titles do not match with amount of flairs")
+                logger.log_message(
+                    f"{subreddit_name}:", "amount of titles do not match with amount of flairs")
                 flag = False
 
             if titles_path is None:
-                log_window.log_message(
-                    subreddit_name, "there is not file \"titles.txt\"")
+                logger.log_message(
+                    f"{subreddit_name}:", "there is no file \"titles.txt\"")
                 flag = False
+
+            print(len(images_paths), len(titles), len(flairs), images_paths, titles, flairs)
 
             if not flag:
                 continue
@@ -290,7 +301,7 @@ def big_post(subs_path, reddit_email, reddit_password, host, port, user, passwor
             not_posted_titles: list[str] = []
             not_user_flairs: list[str] = []
             for ind, image_path in enumerate(images_paths):
-                log_window.log_message(
+                logger.log_message(
                     f"{subreddit_name}->{titles[ind]}: ", end="")
                 try:
                     message, is_successfully_posted =\
@@ -301,7 +312,7 @@ def big_post(subs_path, reddit_email, reddit_password, host, port, user, passwor
                              titles[ind],
                              flairs[ind] if flairs else None)
 
-                    log_window.log_message(titles[ind], message)
+                    logger.log_message(message)
                     if is_successfully_posted:
                         image_name = os.path.basename(image_path)
                         move(image_path, os.path.join(
@@ -311,7 +322,7 @@ def big_post(subs_path, reddit_email, reddit_password, host, port, user, passwor
                         if flairs is not None:
                             not_user_flairs.append(flairs[ind])
                 except Exception as e:
-                    log_window.log_message(str(e).lower())
+                    logger.log_message(str(e).lower())
                     not_posted_titles.append(titles[ind])
                     if flairs is not None:
                         not_user_flairs.append(flairs[ind])
@@ -369,6 +380,8 @@ def choose_email_window(update_status_callback):
 def tkinter_reddit_big_post():
     global user_email
 
+    root = tk.Tk()
+
     def update_status():
         if reddit_account_email:
             label_selected_account.config(text=f"Selected Account: {
@@ -383,6 +396,7 @@ def tkinter_reddit_big_post():
             entry_folder.insert(0, folder_selected)
 
     def start_big_post():
+        nonlocal root
         if not reddit_account_email:
             messagebox.showerror("Error", "Please select an account first!")
             return
@@ -393,17 +407,24 @@ def tkinter_reddit_big_post():
             if proxy is None:
                 messagebox.showerror("Error", message)
             else:
-                big_post(
-                    subs_path,
-                    reddit_account_email,
-                    reddit_account_password,
-                    **proxy
-                )
-            messagebox.showinfo("Success", "Posting started!")
+                root.destroy()
+                logger: LogWindow = LogWindow()
+                poster_thread =\
+                    Thread(
+                        target=big_post,
+                        args=(
+                            logger,
+                            subs_path,
+                            reddit_account_email,
+                            reddit_account_password,
+                        ),
+                        kwargs=proxy
+                    )
+                poster_thread.start()
+                logger.run()
         else:
             messagebox.showerror("Error", "Invalid folder path!")
 
-    root = tk.Tk()
     root.title("Reddit Big Poster")
 
     tk.Label(root, text="Select Account:", font=("Modern No. 20", 18)).grid(

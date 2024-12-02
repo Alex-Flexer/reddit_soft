@@ -1,22 +1,24 @@
-from seleniumwire import webdriver
+from multiprocessing import Process
+from time import sleep, time as now
 
 
-def driver_proxy(proxy_host, proxy_port, proxy_user, proxy_password):
-    proxy_options = {
-        'proxy': {
-            'http': f'http://{proxy_user}:{proxy_password}@{proxy_host}:{proxy_port}',
-            'https': f'http://{proxy_user}:{proxy_password}@{proxy_host}:{proxy_port}',
-            'no_proxy': 'localhost,127.0.0.1'
-        }
-    }
-
-    driver = webdriver.Chrome(seleniumwire_options=proxy_options)
-
-    return driver
+def f(name):
+    sleep(10)
+    print('hello', name, now())
 
 
-host = "139.171.59.194"
-port = "50100"
-user = "zavalishinn26"
-password = "uKvcZHash5"
-driver_proxy(host, port, user, password)
+def d() -> list[Process]:
+    names = ["bob", "alex", "felix", "daria", "boris", "maria"]
+    process: list[Process] = []
+    lf = lambda func, args: Process(target=func, args=args)
+
+    for name in names:
+        p = lf(f, (name,))
+        p.start()
+        process.append(p)
+
+    return process
+
+
+if __name__ == "__main__":
+    d()

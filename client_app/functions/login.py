@@ -41,7 +41,7 @@ def rand_sleep() -> None:
     sleep(uniform(0.1, 1))
 
 
-def login(mouse: ActionChains, driver: WebDriver, username: str, password: str, speed: int = 0, accuracy: float = 1.0) -> bool:
+def _login(mouse: ActionChains, driver: WebDriver, username: str, password: str, speed: int = 0, accuracy: float = 1.0) -> bool:
     driver.get("https://www.reddit.com/login/")
 
     sleep(3)
@@ -66,7 +66,21 @@ def login(mouse: ActionChains, driver: WebDriver, username: str, password: str, 
     sleep(10)
 
     start_time = datetime.now()
-    while start_time - datetime.now() < timedelta(seconds=20) and "www.reddit.com/login/" in driver.current_url:
+    while datetime.now() - start_time < timedelta(seconds=20) and "www.reddit.com/login/" in driver.current_url:
         continue
 
     return "www.reddit.com/login/" not in driver.current_url
+
+
+def login(*args, **kwargs):
+    for _ in range(5):
+        try:
+            result = _login(*args, **kwargs)
+        except Exception:
+            pass
+        else:
+            if result:
+                return True
+        sleep(20)
+
+    return False

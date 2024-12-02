@@ -1,24 +1,25 @@
 import tkinter as tk
-from tkinter import scrolledtext
-
 from tkinter.scrolledtext import ScrolledText
 
-# Глобальное окно для логов
+
 class LogWindow:
-    _log_window: tk.Toplevel
-    _log_text: ScrolledText
-
     def __init__(self):
-        self.log_window = tk.Toplevel()
-        self.log_window.title("Log Output")
-        self.log_window.geometry("400x300")
+        self.root = tk.Tk()
+        self.root.title("Error Logger")
+        self.text_area = ScrolledText(
+            self.root, wrap=tk.WORD, width=50, height=20)
+        self.text_area.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+        self.text_area.configure(state=tk.DISABLED)
 
-        self._log_text = scrolledtext.ScrolledText(self.log_window, wrap=tk.WORD, width=50, height=15)
-        self._log_text.pack(pady=10, padx=10)
-        self._log_text.insert(tk.END, "Log output:\n")
-
-    def log_message(self, *messages: str, sep: str=' ', end: str='\n'):
+    def log_message(self, *messages: str, sep: str = ' ', end: str = '\n\n'):
         message = sep.join(messages) + end
-        self._log_text.insert(tk.END, f"{message}\n")
-        self._log_text.see(tk.END)  # Автоматическая прокрутка вниз
-        self.log_window.update_idletasks()
+        self.root.after(0, self._append_message, message)
+
+    def _append_message(self, message):
+        self.text_area.configure(state=tk.NORMAL)
+        self.text_area.insert(tk.END, message + "\n")
+        self.text_area.configure(state=tk.DISABLED)
+        self.text_area.see(tk.END)
+
+    def run(self):
+        self.root.mainloop()
