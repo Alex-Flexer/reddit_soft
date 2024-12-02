@@ -192,13 +192,7 @@ def post(
         return "was successfully posted", True
 
 
-def big_post(logger, subs_path, reddit_email, reddit_password, host, port, user, password):
-    # driver: WebDriver = driver_proxy(host, port, user, password)
-    options = Options()
-    # options.add_argument("--headless")
-    driver: WebDriver = Chrome(options=options)
-
-    mouse = ActionChains(driver)
+def big_post(logger, mouse: ActionChains, driver: WebDriver, subs_path, reddit_email, reddit_password, host, port, user, password):
     try:
         is_logged_in = login(mouse, driver, reddit_email,
                              reddit_password, 0, 0.8)
@@ -409,19 +403,32 @@ def tkinter_reddit_big_post():
             else:
                 root.destroy()
                 logger: LogWindow = LogWindow()
+
+                driver = Chrome()
+                mouse = ActionChains(driver)
+
                 poster_thread =\
                     Thread(
                         target=big_post,
                         args=(
                             logger,
+                            mouse,
+                            driver,
                             subs_path,
                             reddit_account_email,
                             reddit_account_password,
                         ),
-                        kwargs=proxy
+                        kwargs=proxy,
+                        daemon=True
                     )
                 poster_thread.start()
-                logger.run()
+
+                def on_close():
+                    logger.root.destroy()
+                    driver.quit()
+                    exit(0)
+
+                logger.run(on_close)
         else:
             messagebox.showerror("Error", "Invalid folder path!")
 

@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
+from typing import Callable
 
 
 class LogWindow:
@@ -21,5 +22,9 @@ class LogWindow:
         self.text_area.configure(state=tk.DISABLED)
         self.text_area.see(tk.END)
 
-    def run(self):
+    def run(self, on_close: Callable | None = None):
+        if on_close is None:
+            on_close = lambda: self.root.destroy()
+
+        self.root.protocol("WM_DELETE_WINDOW", on_close)
         self.root.mainloop()

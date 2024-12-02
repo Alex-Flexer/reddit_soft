@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from datetime import datetime, timedelta
-from threading import Thread
+from threading import Thread, Event
 from time import sleep
 from random import randint, uniform, random
 from selenium.webdriver.common.by import By
@@ -14,9 +14,10 @@ from login import login, click
 from log_windows import LogWindow
 from bisect import bisect_left
 from keyring import get_password
-from db_funcs import get_reddit_accounts
 from proxy import driver_proxy
+from db_funcs import get_reddit_accounts
 from selenium.webdriver.common.action_chains import ActionChains
+
 
 WebDriver = ChromeWebdriver | FirefoxWebdriver
 
@@ -222,7 +223,12 @@ def tkinter_reddit_farm():
                 daemon=True
             )
         farming_thread.start()
-        logger.run()
+
+        def on_close():
+            logger.root.destroy()
+            driver.quit()
+            exit(0)
+        logger.run(on_close)
 
     root = tk.Tk()
     root.title("Reddit Karma Farmer")

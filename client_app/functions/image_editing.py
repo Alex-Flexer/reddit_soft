@@ -146,11 +146,15 @@ def uniq_tkinter():
         root.destroy()
         logger = LogWindow()
         uniq_thread =\
-            Thread(target=uniqueize, args=(
-                logger,
-                tp,
-                file_path,
-                amount,)
+            Thread(
+                target=uniqueize,
+                args=(
+                    logger,
+                    tp,
+                    file_path,
+                    amount
+                ),
+                daemon=True
             )
         uniq_thread.start()
         logger.run()

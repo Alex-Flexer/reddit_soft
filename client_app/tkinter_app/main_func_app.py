@@ -1,9 +1,7 @@
 from keyring import get_password
 import tkinter as tk
 from tkinter import messagebox
-
 from multiprocessing import Process
-
 import sys
 
 sys.path.insert(1, 'functions')
@@ -71,11 +69,14 @@ def create_window():
         ("Converters", tkinter_converters),
     ]
 
+    def start_process(func):
+        Process(target=func, daemon=True).start()
+
     for text, func in buttons:
         button = tk.Button(
             scrollable_frame,
             text=text,
-            command=func,
+            command=lambda f=func: start_process(f),
             **button_config
         )
 
