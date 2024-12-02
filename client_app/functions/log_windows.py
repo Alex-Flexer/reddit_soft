@@ -12,7 +12,7 @@ class LogWindow:
         self.text_area.configure(state=tk.DISABLED)
 
     def log_message(self, *messages: str, sep: str = ' ', end: str = '\n\n'):
-        message = sep.join(messages) + end
+        message = sep.join(map(str, messages)) + end
         self.root.after(0, self._append_message, message)
 
     def _append_message(self, message):
