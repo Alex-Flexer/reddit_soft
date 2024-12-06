@@ -61,7 +61,7 @@ def reload_reaction_sections(driver: WebDriver) -> None:
         )
 
 
-def mark_reaction(logger: LogWindow, mouse: ActionChains, driver: WebDriver, upvote_chance: float, y_position: int):
+def mark_reaction(logger: LogWindow, mouse: ActionChains, driver: WebDriver, y_position: int):
     section_ind = bisect_left(reaction_section_list,
                               y_position, key=lambda section: section.y)
     if section_ind >= len(reaction_section_list):
@@ -69,28 +69,17 @@ def mark_reaction(logger: LogWindow, mouse: ActionChains, driver: WebDriver, upv
 
     section_ind = bisect_left(reaction_section_list,
                               y_position, key=lambda section: section.y)
-    if random() <= upvote_chance:
+
+    try:
+        click(mouse, reaction_section_list[section_ind].upvote_button)
+    except ElementClickInterceptedException:
         try:
-            click(mouse, reaction_section_list[section_ind].upvote_button)
+            click(
+                mouse, reaction_section_list[section_ind - 1].upvote_button)
         except ElementClickInterceptedException:
-            try:
-                click(
-                    mouse, reaction_section_list[section_ind - 1].upvote_button)
-            except ElementClickInterceptedException:
-                logger.log_message("Failed attempt to upvote")
-        else:
-            logger.log_message("Successful upvote")
+            logger.log_message("Failed attempt to upvote")
     else:
-        try:
-            click(mouse, reaction_section_list[section_ind].downvote_button)
-        except ElementClickInterceptedException:
-            try:
-                click(
-                    mouse, reaction_section_list[section_ind - 1].downvote_button)
-            except ElementClickInterceptedException:
-                logger.log_message("Failed attempt to downvote")
-        else:
-            logger.log_message("Successful downvote")
+        logger.log_message("Successfully upvoted")
 
 
 def smooth_scroll_reddit_posts(driver: WebDriver, max_scroll_height: int) -> int:
@@ -118,11 +107,23 @@ def smooth_scroll_reddit_posts(driver: WebDriver, max_scroll_height: int) -> int
     return current_scroll_delta
 
 
-def farm_carma(logger: LogWindow, mouse: ActionChains, driver: WebDriver, end_time: datetime):
+def farm_carma(
+        logger: LogWindow,
+        mouse: ActionChains,
+        driver: WebDriver,
+        end_time: datetime,
+        redd_email: str,
+        redd_password: str
+) -> None:
     try:
         logger.log_message("Logging in...")
-        login_res = login(mouse, driver, reddit_account_email,
-                          reddit_account_password, 0, 0.8)
+        login_res = login(
+            mouse,
+            driver,
+            redd_email,
+            redd_password,
+            0, 0.8
+        )
     except Exception as e:
         logger.log_message(e)
         return
@@ -130,6 +131,8 @@ def farm_carma(logger: LogWindow, mouse: ActionChains, driver: WebDriver, end_ti
     if not login_res:
         logger.log_message("Unknown login error")
         return
+
+    logger.log_message("Successfully logged in!")
 
     current_scroll_position = 0
 
@@ -142,8 +145,7 @@ def farm_carma(logger: LogWindow, mouse: ActionChains, driver: WebDriver, end_ti
                 driver, randint(800, 1000))
             sleep(uniform(0.3, 1.2))
             try:
-                mark_reaction(logger, mouse, driver, 0.7,
-                              current_scroll_position)
+                mark_reaction(logger, mouse, driver, current_scroll_position)
             except Exception:
                 logger.log_message("Failed attempt to vote")
 
@@ -151,6 +153,9 @@ def farm_carma(logger: LogWindow, mouse: ActionChains, driver: WebDriver, end_ti
         except Exception as e:
             logger.log_message(e)
             return
+
+    driver.quit()
+    logger.log_message("Farming is finished")
 
 
 def choose_email_window(update_status_callback):
@@ -219,6 +224,7 @@ def tkinter_reddit_farm():
                     mouse,
                     driver,
                     datetime.now() + timedelta(hours=1),
+                    reddit_account_email
                 ),
                 daemon=True
             )

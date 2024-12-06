@@ -8,8 +8,8 @@ def add_account(
         redd_password: str,
         host: str,
         port: str,
+        user: str,
         password: str,
-        user: str
 ) -> dict[str, str] | None:
 
     json_response = None
@@ -39,7 +39,7 @@ def get_proxy(email: str) -> tuple[dict[str, str], str]:
         if not json["result"]:
             result = None, json["message"]
         else:
-            result = json["proxy"], ""
+            result = json["proxy"], None
     finally:
         return result
 
@@ -52,7 +52,7 @@ def get_reddit_accounts(user_email: str) -> tuple[list[dict[str, str]], str]:
             "http://reddsyndicate.com/get/reddit-accounts", data=data)
         data = response.json()
         if data["result"]:
-            result = data["accounts"], ""
+            result = data["accounts"], None
         else:
             result = None, data["message"]
     finally:

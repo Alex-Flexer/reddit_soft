@@ -1,11 +1,12 @@
 from seleniumwire import webdriver
+from seleniumwire.webdriver import Chrome
 
 
-def driver_proxy(proxy_host, proxy_port, proxy_user, proxy_password):
+def driver_proxy(host, port, user, password) -> Chrome:
     proxy_options = {
         'proxy': {
-            'http': f'http://{proxy_user}:{proxy_password}@{proxy_host}:{proxy_port}',
-            'https': f'http://{proxy_user}:{proxy_password}@{proxy_host}:{proxy_port}',
+            'http': f'http://{user}:{password}@{host}:{port}',
+            'https': f'http://{user}:{password}@{host}:{port}',
             'no_proxy': 'localhost,127.0.0.1'
         }
     }

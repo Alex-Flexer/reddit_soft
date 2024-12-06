@@ -12,8 +12,6 @@ from io import BytesIO
 from PIL import Image
 from random import randint
 
-
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver import Chrome
 
 from selenium.webdriver.common.keys import Keys
@@ -38,7 +36,7 @@ from sys import path
 path.insert(1, "functions")
 
 from db_funcs import get_reddit_accounts, get_proxy
-# from proxy import driver_proxy
+from proxy import driver_proxy
 
 
 WebDriver = ChromeWebdriver | FirefoxWebdriver
@@ -192,17 +190,17 @@ def post(
         return "was successfully posted", True
 
 
-def big_post(logger, mouse: ActionChains, driver: WebDriver, subs_path, reddit_email, reddit_password, host, port, user, password):
+def big_post(logger, mouse: ActionChains, driver: WebDriver, subs_path, reddit_email, reddit_password):
     try:
         is_logged_in = login(mouse, driver, reddit_email,
                              reddit_password, 0, 0.8)
     except Exception as e:
         logger.log_message(str(e))
         return
-    else:
-        if not is_logged_in:
-            logger.log_message("Unknown login error")
-            return
+
+    if not is_logged_in:
+        logger.log_message("Unknown login error")
+        return
 
     logger.log_message("Successfully logged in")
 
@@ -397,38 +395,39 @@ def tkinter_reddit_big_post():
 
         subs_path = entry_folder.get()
         if os.path.exists(subs_path):
-            proxy, message = get_proxy(reddit_account_email)
-            if proxy is None:
-                messagebox.showerror("Error", message)
-            else:
-                root.destroy()
-                logger: LogWindow = LogWindow()
+            proxy, err = get_proxy(reddit_account_email)
+            if err is not None:
+                messagebox.showerror("Error", err)
+                return
+            # else:
 
-                driver = Chrome()
-                mouse = ActionChains(driver)
+            root.destroy()
+            logger: LogWindow = LogWindow()
 
-                poster_thread =\
-                    Thread(
-                        target=big_post,
-                        args=(
-                            logger,
-                            mouse,
-                            driver,
-                            subs_path,
-                            reddit_account_email,
-                            reddit_account_password,
-                        ),
-                        kwargs=proxy,
-                        daemon=True
-                    )
-                poster_thread.start()
+            driver = driver_proxy(**proxy)
+            mouse = ActionChains(driver)
 
-                def on_close():
-                    logger.root.destroy()
-                    driver.quit()
-                    exit(0)
+            poster_thread =\
+                Thread(
+                    target=big_post,
+                    args=(
+                        logger,
+                        mouse,
+                        driver,
+                        subs_path,
+                        reddit_account_email,
+                        reddit_account_password,
+                    ),
+                    daemon=True
+                )
+            poster_thread.start()
 
-                logger.run(on_close)
+            def on_close():
+                logger.root.destroy()
+                driver.quit()
+                exit(0)
+
+            logger.run(on_close)
         else:
             messagebox.showerror("Error", "Invalid folder path!")
 
