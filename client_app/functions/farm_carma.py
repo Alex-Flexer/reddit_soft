@@ -5,7 +5,6 @@ from threading import Thread
 from time import sleep
 from random import randint, uniform, random
 from selenium.webdriver.common.by import By
-from selenium import webdriver
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeWebdriver
 from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebdriver
 from selenium.common.exceptions import ElementClickInterceptedException
@@ -23,13 +22,11 @@ WebDriver = ChromeWebdriver | FirefoxWebdriver
 
 
 class ReactionSection:
-    upvote_button: WebElement | None
-    downvote_button: WebElement | None
+    upvote_button: WebElement
     y: int
 
-    def __init__(self, upvote_button: WebElement, downvote_button: WebElement, y: int):
+    def __init__(self, upvote_button: WebElement, y: int):
         self.upvote_button = upvote_button
-        self.downvote_button = downvote_button
         self.y = y
 
 
@@ -44,31 +41,30 @@ def reload_reaction_sections(driver: WebDriver) -> None:
 
     for shadow_host in shadow_hosts:
         shadow_root = shadow_host.shadow_root
-        buttons = shadow_root.find_elements(By.CSS_SELECTOR, 'span > button')
-
-        upvote_button: WebElement | None = None
-        downvote_button: WebElement | None = None
-
-        for but in buttons:
-            if "upvote" in but.get_attribute("class"):
-                upvote_button = but
-            elif "downvote" in but.get_attribute("class"):
-                downvote_button = but
+        upvote_button =\
+            shadow_root.find_element(
+                By.CSS_SELECTOR, 'button.group:nth-child(1)')
 
         reaction_section_list.append(
-            ReactionSection(upvote_button, downvote_button,
-                            upvote_button.location['y'])
+            ReactionSection(upvote_button, upvote_button.location['y'])
         )
 
 
 def mark_reaction(logger: LogWindow, mouse: ActionChains, driver: WebDriver, y_position: int):
-    section_ind = bisect_left(reaction_section_list,
-                              y_position, key=lambda section: section.y)
+    section_ind = bisect_left(
+        reaction_section_list,
+        y_position,
+        key=lambda section: section.y
+    )
+
     if section_ind >= len(reaction_section_list):
         reload_reaction_sections(driver)
 
-    section_ind = bisect_left(reaction_section_list,
-                              y_position, key=lambda section: section.y)
+    section_ind = bisect_left(
+        reaction_section_list,
+        y_position,
+        key=lambda section: section.y
+    )
 
     try:
         click(mouse, reaction_section_list[section_ind].upvote_button)
@@ -119,7 +115,6 @@ def farm_carma(
     try:
         logger.log_message("Logging in...")
         login_res = login(
-            logger,
             mouse,
             driver,
             redd_email,
