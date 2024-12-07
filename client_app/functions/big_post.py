@@ -335,6 +335,8 @@ def big_post(
                 with open(flairs_path, 'w', encoding='utf-8') as f:
                     f.write('\n'.join(not_user_flairs))
         logger.log_message(f"Posting {subreddit_name} if finished")
+    driver.quit()
+    logger.log_message("Posting is finished!")
 
 
 def choose_email_window(update_status_callback):

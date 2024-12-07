@@ -58,8 +58,8 @@ async def send_installer() -> FileResponse:
     headers = {'Access-Control-Expose-Headers': 'Content-Disposition'}
 
     return FileResponse(
-        "../server/private_resources/installer.py",
-        filename="RS-installer.py", headers=headers)
+        "../server/private_resources/installer.pyw",
+        filename="RS-installer.pyw", headers=headers)
 
 
 @app.get("/get/instruction")

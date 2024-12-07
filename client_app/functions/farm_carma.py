@@ -213,7 +213,7 @@ def tkinter_reddit_farm():
             return
 
         subreddit = entry_subreddit.get()
-        duration = entry_duration.get()
+        duration = int(entry_duration.get())
 
         if not all([subreddit, duration]):
             messagebox.showerror("Error", "Fill in all inputs fields!")
@@ -236,6 +236,7 @@ def tkinter_reddit_farm():
         driver = driver_proxy(**proxy)
         mouse = ActionChains(driver)
         logger = LogWindow()
+        logger.log_message("Logger is successfully initialized")
         farming_thread =\
             Thread(
                 target=farm_carma,
@@ -245,6 +246,7 @@ def tkinter_reddit_farm():
                     driver,
                     datetime.now() + timedelta(minutes=duration),
                     reddit_account_email,
+                    reddit_account_password,
                     subreddit
                 ),
                 daemon=True

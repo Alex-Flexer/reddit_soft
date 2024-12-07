@@ -1,5 +1,6 @@
 from seleniumwire import webdriver
 from seleniumwire.webdriver import Chrome
+from selenium.webdriver.chrome.options import Options
 
 
 def driver_proxy(host, port, user, password) -> Chrome:
@@ -10,7 +11,11 @@ def driver_proxy(host, port, user, password) -> Chrome:
             'no_proxy': 'localhost,127.0.0.1'
         }
     }
+    options = Options()
+    options.add_argument("--headless")
 
-    driver = webdriver.Chrome(seleniumwire_options=proxy_options)
+    driver = webdriver.Chrome(
+        seleniumwire_options=proxy_options,
+        options=options)
 
     return driver
