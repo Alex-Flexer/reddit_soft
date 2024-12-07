@@ -84,6 +84,11 @@ def tkinter_reddit_farm_with_delay():
 
         start_time_str = start_time_entry.get()
         end_time_str = end_time_entry.get()
+        subreddit_name = subreddit_entry.get()
+
+        if not all([start_time_str, end_time_str, subreddit_name]):
+            messagebox.showerror("Error", "Fill in all inputs fields!")
+            return
 
         try:
             start_time = datetime.strptime(start_time_str, "%H:%M").time()
@@ -181,11 +186,19 @@ def tkinter_reddit_farm_with_delay():
     end_time_entry.grid(row=2, column=1, padx=10, pady=10)
     end_time_entry.insert(0, "00:00")
 
+    tk.Label(
+        root,
+        text="Subreddit name:",
+        font=("Modern No. 20", 14)
+    ).grid(row=3, column=0, padx=10, pady=10, sticky="e")
+    subreddit_entry = ttk.Entry(root, font=("Modern No. 20", 14))
+    subreddit_entry.grid(row=3, column=1, padx=10, pady=10)
+
     tk.Button(
         root,
         text="Start Farming",
         font=("Modern No. 20", 18),
         command=start_farming
-    ).grid(row=3, column=1, padx=10, pady=10)
+    ).grid(row=4, column=1, padx=10, pady=10)
 
     root.mainloop()
