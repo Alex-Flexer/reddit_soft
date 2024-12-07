@@ -126,7 +126,8 @@ def tkinter_reddit_farm_with_delay():
                         driver,
                         end_time_full,
                         reddit_account_email,
-                        reddit_account_password
+                        reddit_account_password,
+                        subreddit_name
                     ),
                     daemon=True
                 )
