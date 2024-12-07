@@ -33,7 +33,7 @@ def remove_archive(path_to_archive: str) -> None:
 
 
 def download_requirements(path_to_requirements: str):
-    system(f"{executable} -m pip install -r {path_to_requirements}")
+    system(f"{executable} -m pip install -r \"{path_to_requirements}\"")
 
 
 def login_user(username: str, password: str) -> tuple[bool, str]:
@@ -128,6 +128,7 @@ def file_selection_window(username: str, password: str):
         else:
             remove_archive(zip_path)
             download_requirements(join(folder_path, "requirements.txt"))
+            messagebox.showinfo("Requirements was successfully installed")
         finally:
             root.destroy()
 

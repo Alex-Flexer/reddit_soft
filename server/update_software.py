@@ -24,10 +24,10 @@ def add_dist_folder(path_to_dist_folder):
 
 
 def main():
-    path_to_client_app = './client_app'
+    path_to_client_app = './private_resources/client_app'
     # path_to_obfuscated_client_app = "server/private_resources/dist"
     path_to_obfuscated_client_app = path_to_client_app#"server/private_resources/"
-    path_to_zipped_client_app = 'server/private_resources/source'
+    path_to_zipped_client_app = './private_resources/source'
 
     zip_directory(path_to_obfuscated_client_app, path_to_zipped_client_app)
 
