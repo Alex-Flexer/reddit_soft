@@ -119,6 +119,7 @@ def farm_carma(
     try:
         logger.log_message("Logging in...")
         login_res = login(
+            logger,
             mouse,
             driver,
             redd_email,
@@ -148,7 +149,7 @@ def farm_carma(
             try:
                 mark_reaction(logger, mouse, driver, current_scroll_position)
             except Exception:
-                logger.log_message("Failed attempt to vote")
+                logger.log_message("Failed attempt to upvote")
 
             sleep(uniform(1, 2))
         except Exception as e:
