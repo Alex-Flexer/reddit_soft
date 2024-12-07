@@ -194,7 +194,9 @@ def big_post(
         driver: WebDriver,
         subs_path: str,
         reddit_email: str,
-        reddit_password: str
+        reddit_password: str,
+        min_interval: int,
+        max_interval: int
 ) -> None:
     logger.log_message("Logging in...")
     try:
@@ -209,6 +211,7 @@ def big_post(
         return
 
     logger.log_message("Successfully logged in")
+    logger.log_message("Posting is started!")
 
     for subdir in os.listdir(subs_path):
         sub_path = os.path.join(subs_path, subdir)
@@ -325,8 +328,7 @@ def big_post(
                     if flairs is not None:
                         not_user_flairs.append(flairs[ind])
 
-                # sleep(randint(8, 20) * 60)
-                sleep(5)
+                sleep(randint(min_interval, max_interval) * 60)
 
             with open(titles_path, 'w', encoding='utf-8') as f:
                 f.write('\n'.join(not_posted_titles))
@@ -403,62 +405,140 @@ def tkinter_reddit_big_post():
             return
 
         subs_path = entry_folder.get()
-        if os.path.exists(subs_path):
-            proxy, err = get_proxy(reddit_account_email)
-            if err is not None:
-                messagebox.showerror("Error", err)
-                return
-            # else:
+        min_interval = entry_min_interval.get()
+        max_interval = entry_max_interval.get()
 
-            root.destroy()
-            logger: LogWindow = LogWindow()
+        if not all([subs_path, min_interval, max_interval]):
+            messagebox.showerror("Error", "Fill in all input fields!")
+            return
 
-            driver = driver_proxy(**proxy)
-            mouse = ActionChains(driver)
+        try:
+            min_interval = int(min_interval)
+            max_interval = int(max_interval)
+        except ValueError:
+            messagebox.showerror("Error", "Interval must be integer!")
+            return
 
-            poster_thread =\
-                Thread(
-                    target=big_post,
-                    args=(
-                        logger,
-                        mouse,
-                        driver,
-                        subs_path,
-                        reddit_account_email,
-                        reddit_account_password,
-                    ),
-                    daemon=True
-                )
-            poster_thread.start()
+        if max_interval < min_interval:
+            messagebox.showerror("Error", "Maximum time interval must be greater than minimum time interval!")
+            return
 
-            def on_close():
-                logger.root.destroy()
-                driver.quit()
-                exit(0)
-
-            logger.run(on_close)
-        else:
+        if not (os.path.exists(subs_path) and os.path.isdir(subs_path)):
             messagebox.showerror("Error", "Invalid folder path!")
+            return
+
+        proxy, err = get_proxy(reddit_account_email)
+        if err is not None:
+            messagebox.showerror("Error", err)
+            return
+
+        root.destroy()
+
+        driver = driver_proxy(**proxy)
+        mouse = ActionChains(driver)
+        logger: LogWindow = LogWindow()
+        logger.log_message("Logger is successfully initialized")
+
+        poster_thread =\
+            Thread(
+                target=big_post,
+                args=(
+                    logger,
+                    mouse,
+                    driver,
+                    subs_path,
+                    reddit_account_email,
+                    reddit_account_password,
+                    min_interval,
+                    max_interval
+                ),
+                daemon=True
+            )
+        poster_thread.start()
+
+        def on_close():
+            logger.root.destroy()
+            driver.quit()
+            exit(0)
+
+        logger.run(on_close)
 
     root.title("Reddit Big Poster")
 
-    tk.Label(root, text="Select Account:", font=("Modern No. 20", 18)).grid(
-        row=0, column=0, padx=10, pady=10)
-    tk.Button(root, text="Choose Account", font=("Modern No. 20", 18), command=lambda: choose_email_window(
-        update_status)).grid(row=0, column=1, padx=10, pady=10)
-    label_selected_account = tk.Label(
-        root, text="No account selected", font=("Modern No. 20", 18), fg="red")
+    tk.Label(
+        root,
+        text="Select Account:",
+        font=("Modern No. 20", 18)
+    ).grid(row=0, column=0, padx=10, pady=10)
+
+    tk.Button(
+        root,
+        text="Choose Account",
+        font=("Modern No. 20", 18),
+        command=lambda: choose_email_window(update_status)
+    ).grid(row=0, column=1, padx=10, pady=10)
+
+    label_selected_account =\
+        tk.Label(
+            root,
+            text="No account selected",
+            font=("Modern No. 20", 18),
+            fg="red"
+        )
+
     label_selected_account.grid(row=0, column=2, padx=10, pady=10)
 
-    tk.Label(root, text="Select subs folder:", font=("Modern No. 20", 18)).grid(
-        row=1, column=0, padx=10, pady=10)
+    tk.Label(
+        root,
+        text="Select subs folder:",
+        font=("Modern No. 20", 18)
+    ).grid(row=1, column=0, padx=10, pady=10)
     entry_folder = tk.Entry(root, width=50)
-    entry_folder.grid(row=1, column=1, padx=10, pady=10)
-    tk.Button(root, text="Browse", font=("Modern No. 20", 18), command=select_folder).grid(
-        row=1, column=2, padx=10, pady=10)
 
-    tk.Button(root, text="Start Posting", font=("Modern No. 20", 18), command=start_big_post).grid(
-        row=2, column=1, padx=10, pady=10)
+    entry_folder.grid(row=1, column=1, padx=10, pady=10)
+    tk.Button(
+        root,
+        text="Browse",
+        font=("Modern No. 20", 18),
+        command=select_folder
+    ).grid(row=1, column=2, padx=10, pady=10)
+
+    valid = root.register(lambda text: text.isdigit())
+    tk.Label(
+        root,
+        text="Minimum time interval (mins):",
+        font=("Modern No. 20", 14)
+    ).grid(row=2, column=0, padx=10, pady=10, sticky="e")
+
+    entry_min_interval = tk.Entry(
+        root,
+        font=("Modern No. 20", 14),
+        validate="key",
+        validatecommand=(valid, "%S")
+    )
+
+    entry_min_interval.grid(row=2, column=1, padx=10, pady=10)
+
+    tk.Label(
+        root,
+        text="Maximum time interval (mins):",
+        font=("Modern No. 20", 14)
+    ).grid(row=3, column=0, padx=10, pady=10, sticky="e")
+
+    entry_max_interval = tk.Entry(
+        root,
+        font=("Modern No. 20", 14),
+        validate="key",
+        validatecommand=(valid, "%S")
+    )
+    entry_max_interval.grid(row=3, column=1, padx=10, pady=10)
+
+    tk.Button(
+        root,
+        text="Start Posting",
+        font=("Modern No. 20", 18),
+        command=start_big_post
+    ).grid(row=4, column=1, padx=10, pady=10)
 
     root.mainloop()
 

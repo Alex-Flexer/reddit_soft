@@ -77,15 +77,33 @@ def tkinter_reddit_big_post_with_delay():
             return
 
         subs_path = entry_folder.get()
-        if not os.path.exists(subs_path) or not os.path.isdir(subs_path):
+        start_time_str = entry_time.get()
+        min_interval = entry_min_interval.get()
+        max_interval = entry_max_interval.get()
+
+        if not all([subs_path, start_big_post, min_interval, max_interval]):
+            messagebox.showerror("Error", "Fill in all input fields")
+            return
+
+        if not (os.path.exists(subs_path) and os.path.isdir(subs_path)):
             messagebox.showerror("Error", "Invalid folder path!")
             return
 
-        start_time_str = entry_time.get()
         try:
             start_time = datetime.strptime(start_time_str, "%H:%M").time()
         except ValueError:
             messagebox.showerror("Error", "Invalid time format! Use HH:MM.")
+            return
+
+        try:
+            min_interval = int(min_interval)
+            max_interval = int(max_interval)
+        except ValueError:
+            messagebox.showerror("Error", "Interval must be integer!")
+            return
+
+        if max_interval < min_interval:
+            messagebox.showerror("Error", "Maximum time interval must be greater than minimum time interval!")
             return
 
         if start_time < datetime.now().time():
@@ -100,6 +118,7 @@ def tkinter_reddit_big_post_with_delay():
             driver = driver_proxy(**proxy)
             mouse = ActionChains(driver)
             logger = LogWindow()
+            logger.log_message("Logger is successfully initialized")
 
             farming_thread =\
                 Thread(
@@ -110,7 +129,9 @@ def tkinter_reddit_big_post_with_delay():
                         driver,
                         subs_path,
                         reddit_account_email,
-                        reddit_account_password
+                        reddit_account_password,
+                        min_interval,
+                        max_interval
                     ),
                     daemon=True
                 )
@@ -166,14 +187,44 @@ def tkinter_reddit_big_post_with_delay():
         command=select_folder
     ).grid(row=1, column=2, padx=10, pady=10)
 
+    valid = root.register(lambda text: text.isdigit())
+    tk.Label(
+        root,
+        text="Minimum time interval (mins):",
+        font=("Modern No. 20", 14)
+    ).grid(row=2, column=0, padx=10, pady=10, sticky="e")
+
+    entry_min_interval = tk.Entry(
+        root,
+        font=("Modern No. 20", 14),
+        validate="key",
+        validatecommand=(valid, "%S")
+    )
+
+    entry_min_interval.grid(row=2, column=1, padx=10, pady=10)
+
+    tk.Label(
+        root,
+        text="Maximum time interval (mins):",
+        font=("Modern No. 20", 14)
+    ).grid(row=3, column=0, padx=10, pady=10, sticky="e")
+
+    entry_max_interval = tk.Entry(
+        root,
+        font=("Modern No. 20", 14),
+        validate="key",
+        validatecommand=(valid, "%S")
+    )
+    entry_max_interval.grid(row=3, column=1, padx=10, pady=10)
+
     tk.Label(
         root,
         text="Start Time (HH:MM):",
         font=("Modern No. 20", 18)
-    ).grid(row=2, column=0, padx=10, pady=10)
+    ).grid(row=4, column=0, padx=10, pady=10)
 
     entry_time = tk.Entry(root, width=10)
-    entry_time.grid(row=2, column=1, padx=10, pady=10)
+    entry_time.grid(row=4, column=1, padx=10, pady=10)
     entry_time.insert(0, "00:00")
 
     tk.Button(
@@ -181,7 +232,7 @@ def tkinter_reddit_big_post_with_delay():
         text="Start Posting",
         font=("Modern No. 20", 18),
         command=start_big_post
-    ).grid(row=3, column=1, padx=10, pady=10)
+    ).grid(row=5, column=1, padx=10, pady=10)
 
     root.mainloop()
 
