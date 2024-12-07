@@ -12,8 +12,6 @@ from io import BytesIO
 from PIL import Image
 from random import randint
 
-from selenium.webdriver import Chrome
-
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -190,7 +188,15 @@ def post(
         return "was successfully posted", True
 
 
-def big_post(logger, mouse: ActionChains, driver: WebDriver, subs_path, reddit_email, reddit_password):
+def big_post(
+        logger: LogWindow,
+        mouse: ActionChains,
+        driver: WebDriver,
+        subs_path: str,
+        reddit_email: str,
+        reddit_password: str
+) -> None:
+    logger.log_message("Logging in...")
     try:
         is_logged_in = login(mouse, driver, reddit_email,
                              reddit_password, 0, 0.8)
@@ -328,6 +334,7 @@ def big_post(logger, mouse: ActionChains, driver: WebDriver, subs_path, reddit_e
             if flairs is not None:
                 with open(flairs_path, 'w', encoding='utf-8') as f:
                     f.write('\n'.join(not_user_flairs))
+        logger.log_message(f"Posting {subreddit_name} if finished")
 
 
 def choose_email_window(update_status_callback):

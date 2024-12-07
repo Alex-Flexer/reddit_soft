@@ -1,5 +1,3 @@
-from big_post import big_post
-from db_funcs import get_reddit_accounts, get_proxy
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from datetime import datetime, timedelta
@@ -9,8 +7,10 @@ from log_windows import LogWindow
 from selenium.webdriver import ActionChains
 from keyring import get_password
 
+from big_post import big_post
 from proxy import driver_proxy
 from farm_karma_with_delay import run_schedule
+from db_funcs import get_reddit_accounts, get_proxy
 
 user_email = None
 reddit_account_email = None

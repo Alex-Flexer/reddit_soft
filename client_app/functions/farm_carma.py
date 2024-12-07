@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from datetime import datetime, timedelta
-from threading import Thread, Event
+from threading import Thread
 from time import sleep
 from random import randint, uniform, random
 from selenium.webdriver.common.by import By
@@ -15,7 +15,7 @@ from log_windows import LogWindow
 from bisect import bisect_left
 from keyring import get_password
 from proxy import driver_proxy
-from db_funcs import get_reddit_accounts
+from db_funcs import get_reddit_accounts, get_proxy
 from selenium.webdriver.common.action_chains import ActionChains
 
 
@@ -113,7 +113,8 @@ def farm_carma(
         driver: WebDriver,
         end_time: datetime,
         redd_email: str,
-        redd_password: str
+        redd_password: str,
+        subreddit_name: str
 ) -> None:
     try:
         logger.log_message("Logging in...")
@@ -136,7 +137,7 @@ def farm_carma(
 
     current_scroll_position = 0
 
-    driver.get("https://reddit.com/")
+    driver.get(f"https://reddit.com/r/{subreddit_name}")
     sleep(8)
 
     while datetime.now() < end_time:
@@ -211,9 +212,28 @@ def tkinter_reddit_farm():
             messagebox.showerror("Error", "Please select an account first!")
             return
 
+        subreddit = entry_subreddit.get()
+        duration = entry_duration.get()
+
+        if not all([subreddit, duration]):
+            messagebox.showerror("Error", "Fill in all inputs fields!")
+            return
+
+        try:
+            duration = int(duration)
+        except ValueError:
+            messagebox.showerror("Error", "Duration period must be integer")
+            return
+
         root.destroy()
 
-        driver = webdriver.Chrome()
+        proxy, err = get_proxy(reddit_account_email)
+
+        if err is not None:
+            messagebox.showerror("Error", err)
+            return
+
+        driver = driver_proxy(**proxy)
         mouse = ActionChains(driver)
         logger = LogWindow()
         farming_thread =\
@@ -223,8 +243,9 @@ def tkinter_reddit_farm():
                     logger,
                     mouse,
                     driver,
-                    datetime.now() + timedelta(hours=1),
-                    reddit_account_email
+                    datetime.now() + timedelta(minutes=duration),
+                    reddit_account_email,
+                    subreddit
                 ),
                 daemon=True
             )
@@ -252,6 +273,33 @@ def tkinter_reddit_farm():
         command=lambda: choose_email_window(update_status)
     ).grid(row=0, column=1, padx=10, pady=10)
 
+    tk.Label(
+        root,
+        text="Subreddit name:",
+        font=("Modern No. 20", 14)
+    ).grid(row=1, column=0, padx=10, pady=10, sticky="e")
+
+    entry_subreddit = tk.Entry(
+        root,
+        font=("Modern No. 20", 14)
+    )
+    entry_subreddit.grid(row=1, column=1, padx=10, pady=10)
+
+    valid = root.register(lambda text: text.isdigit())
+    tk.Label(
+        root,
+        text="Duration (mins):",
+        font=("Modern No. 20", 14)
+    ).grid(row=2, column=0, padx=10, pady=10, sticky="e")
+
+    entry_duration = tk.Entry(
+        root,
+        font=("Modern No. 20", 14),
+        validate="key",
+        validatecommand=(valid, "%S")
+    )
+    entry_duration.grid(row=2, column=1, padx=10, pady=10)
+
     label_selected_account =\
         tk.Label(
             root,
@@ -267,6 +315,6 @@ def tkinter_reddit_farm():
         text="Start Farming",
         font=("Modern No. 20", 18),
         command=start_farming
-    ).grid(row=1, column=1, padx=10, pady=10)
+    ).grid(row=3, column=1, padx=10, pady=10)
 
     root.mainloop()
