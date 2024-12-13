@@ -69,6 +69,7 @@ async function login() {
         }
         else {
             window.location.replace("/buy-form");
+            localStorage.setItem("code_confirmed", true)
         }
     }
 

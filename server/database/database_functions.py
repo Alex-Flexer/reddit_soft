@@ -145,10 +145,11 @@ def renew_subscription(email: str) -> bool:
     user = get_user_by_email(email)
 
     end_date = user.subscription_end_date
-    end_date = date.today() if end_date is None else end_date
-
-    end_date += timedelta(days=30)
-
+    if end_date is None:
+        end_date = date.today() + timedelta(days=33)
+    else:
+        end_date += timedelta(days=30)
+    
     session.query(User).filter_by(email=email).\
         update({"subscription_end_date": end_date})
 

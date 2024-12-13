@@ -87,7 +87,7 @@ async def command_start(message: Message) -> None:
 async def command_help(message: Message) -> None:
     await message.answer(
         "How can I help you?\n\n"
-        "If you have an account please user command /login to log in. "
+        "If you have an account please use command /login to log in. "
         "Then you will get more functionality inside the chatbot.\n\n"
         f"If you have not created your own account yet, you can do it {html.link('here', 'http://90.156.168.186:8000/sign-up')}.\n\n"
         f"Also if you have some software problem or some other questions you can contact to our support team (reddsyndicate@mail.ru)."
@@ -120,7 +120,7 @@ async def command_login(message: Message, state: FSMContext) -> None:
 
 @form_router.message(F.text.casefold() == "get confirmation code")
 async def command_get_confirmation_code(message: Message, state: FSMContext) -> None:
-    is_logged_in = state.get_value("logged_in")
+    is_logged_in = await state.get_value("logged_in")
     if not is_logged_in:
         await message.answer(
             "Please, firstly log in. Use command /login",
@@ -212,7 +212,7 @@ async def process_log_out(message: Message, state: FSMContext) -> None:
     else:
         await state.clear()
         await message.answer(
-            "You are successfully loged out.",
+            "You are successfully logged out.",
             reply_markup=ReplyKeyboardRemove()
         )
     
@@ -241,7 +241,7 @@ async def show_account_info(message: Message, email):
     user = db.get_user_by_email(email)
 
     await message.answer(
-        f"Your email address: {email},\n"
+        f"Your username: {email},\n"
         f"Your subscription will expire on: {user.subscription_end_date}"
         if db.check_user_subscription(email)
         else "Your subscription has expired or was not activated."
@@ -261,7 +261,11 @@ async def process_renew_subscription(message: Message, state: FSMContext):
         await state.set_state(Form.renew_subscription)
         username = message.from_user.username
 
-        current_price = 300 + round(random(), 3)
+        main_price =\
+        299 if db.get_user_by_email(username).subscription_end_date is None\
+        else 349
+
+        current_price = main_price + round(random(), 3)
         db.update_subscription_price(username, current_price)
 
         crypto_token = "TMPYVBkVZj5pboTAW3VqsW29QMNq6F9Bwq"
@@ -332,5 +336,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    logging.basicConfig(stream=sys.stdout)
     asyncio.run(main())

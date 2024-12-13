@@ -1,10 +1,15 @@
-from tkinter import Tk, Label, Entry, Button, filedialog, messagebox
+from os import system, mkdir, remove
+from sys import executable
+
+system(f"{executable} -m pip install requests")
+system(f"{executable} -m pip install tk")
+
 from requests import post, ConnectionError
+from tkinter import Tk, Label, Entry, Button, filedialog, messagebox
+
 from json import dumps
 from os.path import join, exists
-from os import system, mkdir, remove
 from zipfile import ZipFile
-from sys import executable
 
 
 def download_software(

@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from random import random
-from os.path import exists as check_path_exists
+from secrets import token_hex
 
 from functions.check_transaction import check_transaction
 import database.database_functions as db
@@ -147,9 +147,12 @@ async def send_price(request: Request) -> JSONResponse:
     json: dict = await request.json()
     response_json: dict = {"result": False, "message": "Incorrect request"}
 
-    if {"email", "price"}.issubset(json.keys()):
+    if {"email"}.issubset(json.keys()):
         email = json["email"]
-        price = json["price"]
+        price =\
+        299 if db.get_user_by_email(email).subscription_end_date is None\
+        else 349
+
         new_price = price + round(random(), 3)
 
         db.update_subscription_price(email, new_price)
@@ -242,6 +245,10 @@ async def check_user_code(request: Request) -> JSONResponse:
             response_json["message"] = "Incorrect authorization code"
         else:
             db.confirm_email_code(email)
+
+            auth_code = token_hex(16)
+            db.update_email_code(email, auth_code)
+
             response_json["message"] = ""
             response_json["result"] = True
 
@@ -310,14 +317,15 @@ async def check_user_credentials(request: Request) -> JSONResponse:
         if db.check_user_exists(email):
             if not db.check_user_credentials(email, password, token):
                 response_json["message"] = "Incorrect credentials"
-            elif not  db.check_user_subscription(email):
+            elif not db.check_user_subscription(email):
                 response_json["message"] = "Subscription expired or was not completed"
             else:
                 response_json["result"] = True
                 response_json["message"] = ""
+                response_json["token"] = db.update_user_token(email)
         else:
             response_json["message"] = "Users with this email does not exists"
-    print(response_json)
+
     return JSONResponse(content=response_json, status_code=200)
 
 
@@ -352,4 +360,4 @@ async def add_reddit_account(request: Request) -> JSONResponse:
 
 if __name__ == '__main__':
     uvicorn.run('main:app', host="90.156.168.186",
-                port=80, reload=True, workers=4)
+                port=80, reload=True, workers=12)

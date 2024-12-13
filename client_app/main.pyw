@@ -1,6 +1,6 @@
 from tkinter import messagebox
 
-from keyring import get_password as get_secret_value
+from keyring import get_password, set_password
 from requests import post
 from json import dumps
 
@@ -23,9 +23,9 @@ def check_user(email, password, token):
 
 
 def main():
-    email = get_secret_value("user", "email")
-    password = get_secret_value("user", "password")
-    token = get_secret_value("user", "token")
+    email = get_password("user", "email")
+    password = get_password("user", "password")
+    token = get_password("user", "token")
 
     if not email or not password or not token:
         start_registration()
@@ -40,6 +40,8 @@ def main():
             else:
                 start_registration()
         else:
+            if "token" in response_json:
+                set_password("user", "token", response_json["token"])
             create_window()
 
 
